@@ -1,0 +1,1621 @@
+{
+  "metadata": {
+    "source_language": "en",
+    "target_language": "LANGUAGE_CODE",
+    "translator": "TRANSLATOR_NAME",
+    "date": "YYYY-MM-DD",
+    "total_strings": 169
+  },
+  "translations": {
+    "home.titles_headers.12": {
+      "source": "About",
+      "translation": "",
+      "context": "title",
+      "file": "home.py",
+      "line": 12,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "home.titles_headers.18": {
+      "source": "Epistem land cover mapping platform demo",
+      "translation": "",
+      "context": "title",
+      "file": "home.py",
+      "line": 18,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "home.titles_headers.26": {
+      "source": "Instructions",
+      "translation": "",
+      "context": "header",
+      "file": "home.py",
+      "line": 26,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "home.markdown_content.7": {
+      "source": "\nAn working example module 1 and 3 of Epistem land cover mapping platform. Adapted from:\n<https://github.com/opengeos/streamlit-map-template>\n",
+      "translation": "",
+      "context": "markdown variable",
+      "file": "home.py",
+      "line": 7,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "home.markdown_content.20": {
+      "source": "\n    This multipage platform aims to demonstrate a working example of epistem's first module, aim to generate a Landsat imagery for certain area of interest.\n    ",
+      "translation": "",
+      "context": "markdown",
+      "file": "home.py",
+      "line": 20,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "home.markdown_content.28": {
+      "source": "\n1. Define the area of interest by drawing a rectangle on the map or upload a shapefile (zip).\n2. Specified the acqusition year of date. If you just type the year, the map will automatically filtered image from January 1 all the way to December 31.\n3. Specified the cloud cover percentage and sensor type (currently support Landsat 5 TM - Landsat 9 OLI2).\n4. click run to generate the mosaic image.\n",
+      "translation": "",
+      "context": "markdown variable",
+      "file": "home.py",
+      "line": 28,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.titles_headers.15": {
+      "source": "Search and Generate Landsat Image Mosaic",
+      "translation": "",
+      "context": "title",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 15,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.titles_headers.22": {
+      "source": "About",
+      "translation": "",
+      "context": "title",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 22,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.titles_headers.41": {
+      "source": "Upload Area of Interest (Shapefile)",
+      "translation": "",
+      "context": "subheader",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 41,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.titles_headers.103": {
+      "source": "Specify Imagery Search Criteria",
+      "translation": "",
+      "context": "subheader",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 103,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.titles_headers.133": {
+      "source": "Select Time Period",
+      "translation": "",
+      "context": "subheader",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 133,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.titles_headers.250": {
+      "source": "Export Mosaic to Google Drive",
+      "translation": "",
+      "context": "subheader",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 250,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.titles_headers.342": {
+      "source": "Module Navigation",
+      "translation": "",
+      "context": "subheader",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 342,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.messages.66": {
+      "source": "No .shp file found in the uploaded zip.",
+      "translation": "",
+      "context": "error",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 66,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.messages.71": {
+      "source": "Shapefile loaded successfully!",
+      "translation": "",
+      "context": "success",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 71,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.messages.82": {
+      "source": "AOI conversion completed!",
+      "translation": "",
+      "context": "success",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 82,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.messages.93": {
+      "source": "Failed to convert AOI to Google Earth Engine format",
+      "translation": "",
+      "context": "error",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 93,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.messages.95": {
+      "source": "Geometry validation failed",
+      "translation": "",
+      "context": "error",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 95,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.messages.98": {
+      "source": "Error reading shapefile: ",
+      "translation": "",
+      "context": "error (f-string part)",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 98,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.messages.99": {
+      "source": "Make sure your shapefile includes all necessary files (.shp, .shx, .dbf, .prj)",
+      "translation": "",
+      "context": "info",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 99,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.messages.177": {
+      "source": " images.",
+      "translation": "",
+      "context": "success (f-string part)",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 177,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.messages.189": {
+      "source": "Failed to query collection size: ",
+      "translation": "",
+      "context": "error (f-string part)",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 189,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.messages.194": {
+      "source": "No images found for the selected criteria, increase cloud cover threshold or change the date range.",
+      "translation": "",
+      "context": "warning",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 194,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.messages.246": {
+      "source": "Upload an AOI and specify search criteria to begin.",
+      "translation": "",
+      "context": "info",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 246,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.messages.325": {
+      "source": "' submitted successfully!",
+      "translation": "",
+      "context": "success (f-string part)",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 325,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.messages.326": {
+      "source": "Task ID: ",
+      "translation": "",
+      "context": "info (f-string part)",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 326,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.messages.336": {
+      "source": "Export failed: ",
+      "translation": "",
+      "context": "error (f-string part)",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 336,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.messages.337": {
+      "source": "Debugging info:",
+      "translation": "",
+      "context": "info",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 337,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.messages.348": {
+      "source": "Please Generate an imagery mosaic before proceeding",
+      "translation": "",
+      "context": "info",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 348,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.labels.43": {
+      "source": "Upload a zipped shapefile (.zip)",
+      "translation": "",
+      "context": "file_uploader",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 43,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.labels.129": {
+      "source": "Select Landsat Sensor:",
+      "translation": "",
+      "context": "selectbox",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 129,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.labels.135": {
+      "source": "Choose date selection mode:",
+      "translation": "",
+      "context": "radio",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 135,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.labels.146": {
+      "source": "Select Year",
+      "translation": "",
+      "context": "selectbox",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 146,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.labels.154": {
+      "source": "Start Date:",
+      "translation": "",
+      "context": "date_input",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 154,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.labels.155": {
+      "source": "End Date:",
+      "translation": "",
+      "context": "date_input",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 155,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.labels.160": {
+      "source": "Maximum Cloud Cover (%):",
+      "translation": "",
+      "context": "slider",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 160,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.labels.163": {
+      "source": "Search Landsat Imagery",
+      "translation": "",
+      "context": "button",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 163,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.labels.256": {
+      "source": "Export Filename:",
+      "translation": "",
+      "context": "text_input",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 256,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.labels.261": {
+      "source": "Google Drive Folder:",
+      "translation": "",
+      "context": "text_input",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 261,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.labels.271": {
+      "source": "Coordinate Reference System:",
+      "translation": "",
+      "context": "selectbox",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 271,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.labels.277": {
+      "source": "Enter EPSG Code:",
+      "translation": "",
+      "context": "text_input",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 277,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.labels.284": {
+      "source": "Pixel Size (meters):",
+      "translation": "",
+      "context": "number_input",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 284,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.labels.290": {
+      "source": "Start Export to Google Drive",
+      "translation": "",
+      "context": "button",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 290,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.labels.344": {
+      "source": "Go to Module 2: Classification Scheme",
+      "translation": "",
+      "context": "button",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 344,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.labels.347": {
+      "source": "🔒 Complete Module 1 First",
+      "translation": "",
+      "context": "button",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 347,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.markdown_content.18": {
+      "source": "\nThis module allows users to search and generate a Landsat image mosaic for a specified area of interest (AOI) and time range using Google Earth Engine (GEE) data.\n",
+      "translation": "",
+      "context": "markdown variable",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 18,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.markdown_content.42": {
+      "source": "currently the platform only support shapefile in .zip format",
+      "translation": "",
+      "context": "markdown",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 42,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.markdown_content.106": {
+      "source": "1. Landsat 1 Multispectral Scanner/MSS (1972 - 1978)",
+      "translation": "",
+      "context": "markdown",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 106,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.markdown_content.107": {
+      "source": "2. Landsat 2 Multispectral Scanner/MSS (1978 - 1982)",
+      "translation": "",
+      "context": "markdown",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 107,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.markdown_content.108": {
+      "source": "3. Landsat 3 Multispectral Scanner/MSS (1978 - 1983)",
+      "translation": "",
+      "context": "markdown",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 108,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.markdown_content.109": {
+      "source": "3. Landsat 4 Thematic Mapper/TM (1982 - 1993)",
+      "translation": "",
+      "context": "markdown",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 109,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.markdown_content.110": {
+      "source": "4. Landsat 5 Thematic Mapper/TM (1984 - 2012)",
+      "translation": "",
+      "context": "markdown",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 110,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.markdown_content.111": {
+      "source": "5. Landsat 7 Enhanced Thematic Mapper Plus/ETM+ (1999 - 2021)",
+      "translation": "",
+      "context": "markdown",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 111,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.markdown_content.112": {
+      "source": "6. Landsat 8 Operational Land Imager/OLI (2013 - present)",
+      "translation": "",
+      "context": "markdown",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 112,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.markdown_content.113": {
+      "source": "7. Landsat 9 Operational Land Imager-2/OLI-2 (2021 - present)",
+      "translation": "",
+      "context": "markdown",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 113,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.markdown_content.134": {
+      "source": "If 'select by year' is choosen, the system automatically search imagery from January 1 untill December 31 ",
+      "translation": "",
+      "context": "markdown",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 134,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.markdown_content.327": {
+      "source": "m\n                    \n                    Check progress in the [Earth Engine Task Manager](https://code.earthengine.google.com/tasks)\n                    ",
+      "translation": "",
+      "context": "markdown (f-string part)",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 327,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.help_text.256": {
+      "source": "The output will be saved as GeoTIFF (.tif)",
+      "translation": "",
+      "context": "text_input.help",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 256,
+      "category": "help_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.help_text.261": {
+      "source": "Google Drive Folder to stored the result",
+      "translation": "",
+      "context": "text_input.help",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 261,
+      "category": "help_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.help_text.277": {
+      "source": "Example: 3278 (UTM Zone 48S)",
+      "translation": "",
+      "context": "text_input.help",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 277,
+      "category": "help_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.other_ui_text.87": {
+      "source": "Area of interest preview:",
+      "translation": "",
+      "context": "text",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 87,
+      "category": "other_ui_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.other_ui_text.104": {
+      "source": "Enter the acquisition date range, cloud cover percentage, and Landsat mission type. Current platform support Landsat 1-4 at sensor radiance and Landsat 5-9 Collection 2 Surface Reflectance Analysis Ready Data (ARD), excluding the thermal bands. Landsat mission avaliability is as follows:",
+      "translation": "",
+      "context": "text",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 104,
+      "category": "other_ui_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.other_ui_text.191": {
+      "source": "Collection size: ",
+      "translation": "",
+      "context": "write (f-string part)",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 191,
+      "category": "other_ui_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.other_ui_text.338": {
+      "source": "AOI type: ",
+      "translation": "",
+      "context": "write (f-string part)",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 338,
+      "category": "other_ui_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.other_ui_text.339": {
+      "source": "Composite exists: ",
+      "translation": "",
+      "context": "write (f-string part)",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 339,
+      "category": "other_ui_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.titles_headers.4": {
+      "source": "Define Land Cover Land Use Classification Scheme",
+      "translation": "",
+      "context": "title",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 4,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.titles_headers.16": {
+      "source": "About",
+      "translation": "",
+      "context": "title",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 16,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.titles_headers.27": {
+      "source": "Add a new class",
+      "translation": "",
+      "context": "subheader",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 27,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.titles_headers.66": {
+      "source": "Classification Scheme",
+      "translation": "",
+      "context": "subheader",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 66,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.titles_headers.93": {
+      "source": "Module Navigation",
+      "translation": "",
+      "context": "subheader",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 93,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.messages.42": {
+      "source": "Please fill in all fields.",
+      "translation": "",
+      "context": "warning",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 42,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.messages.88": {
+      "source": "No classes added yet. Please add at least one class.",
+      "translation": "",
+      "context": "info",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 88,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.messages.117": {
+      "source": " classes",
+      "translation": "",
+      "context": "success (f-string part)",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 117,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.messages.119": {
+      "source": "Add at least one class to complete this module",
+      "translation": "",
+      "context": "info",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 119,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.labels.30": {
+      "source": "Class ID",
+      "translation": "",
+      "context": "text_input",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 30,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.labels.31": {
+      "source": "Class Name",
+      "translation": "",
+      "context": "text_input",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 31,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.labels.32": {
+      "source": "Color Code",
+      "translation": "",
+      "context": "color_picker",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 32,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.labels.33": {
+      "source": "Add Class",
+      "translation": "",
+      "context": "form_submit_button",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 33,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.labels.49": {
+      "source": "Edit Class ID",
+      "translation": "",
+      "context": "text_input",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 49,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.labels.50": {
+      "source": "Edit Class Name",
+      "translation": "",
+      "context": "text_input",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 50,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.labels.51": {
+      "source": "Edit Color Code",
+      "translation": "",
+      "context": "color_picker",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 51,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.labels.52": {
+      "source": "Save Changes",
+      "translation": "",
+      "context": "form_submit_button",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 52,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.labels.53": {
+      "source": "Cancel",
+      "translation": "",
+      "context": "form_submit_button",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 53,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.labels.72": {
+      "source": "Edit",
+      "translation": "",
+      "context": "button",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 72,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.labels.74": {
+      "source": "Delete",
+      "translation": "",
+      "context": "button",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 74,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.labels.81": {
+      "source": "Download Classification Scheme as CSV",
+      "translation": "",
+      "context": "download_button.label",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 81,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.labels.103": {
+      "source": "⬅️ Back to Module 1: Generate Mosaic",
+      "translation": "",
+      "context": "button",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 103,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.labels.109": {
+      "source": "➡️ Go to Module 3-4: Training Data Analysis",
+      "translation": "",
+      "context": "button",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 109,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.labels.112": {
+      "source": "🔒 Complete Module 2 First",
+      "translation": "",
+      "context": "button",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 112,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.markdown_content.7": {
+      "source": "\nIn this module, users can define their own land cover land use (LCLU) classification scheme by specifying unique class ID, names and corresponding color codes. The defined scheme can be saved as a CSV file for future use in land cover classification tasks.\n",
+      "translation": "",
+      "context": "markdown variable",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 7,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.markdown_content.11": {
+      "source": "User must define the desired land cover land use classification scheme. The class ID is a unique identifier for each land cover type, the class name is a descriptive label, and the color code is used for visual representation on maps. Users can add multiple classes, edit existing ones, and delete any unnecessary entries. Once the classification scheme is finalized, it can be downloaded as a CSV file for easy integration into other modules",
+      "translation": "",
+      "context": "markdown",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 11,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.help_text.112": {
+      "source": "Please add at least one class to the classification scheme",
+      "translation": "",
+      "context": "button.help",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 112,
+      "category": "help_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.titles_headers.16": {
+      "source": "Analzye the Separability of Region of Interest (ROI)",
+      "translation": "",
+      "context": "title",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 16,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.titles_headers.29": {
+      "source": "About",
+      "translation": "",
+      "context": "title",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 29,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.titles_headers.63": {
+      "source": "A. Upload Region of Interest (Shapefile)",
+      "translation": "",
+      "context": "subheader",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 63,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.titles_headers.129": {
+      "source": "B. Perform Separability Analysis",
+      "translation": "",
+      "context": "subheader",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 129,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.titles_headers.150": {
+      "source": "Analysis Parameters",
+      "translation": "",
+      "context": "subheader",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 150,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.titles_headers.246": {
+      "source": "C. Analysis Results",
+      "translation": "",
+      "context": "subheader",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 246,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.titles_headers.318": {
+      "source": "Module Navigation",
+      "translation": "",
+      "context": "subheader",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 318,
+      "category": "titles_headers",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.messages.37": {
+      "source": "Landsat mosaic available from Module 1!",
+      "translation": "",
+      "context": "success",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 37,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.messages.59": {
+      "source": "Landsat mosaic not found. Please run Module 1 first.",
+      "translation": "",
+      "context": "warning",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 59,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.messages.87": {
+      "source": "No .shp file found in the uploaded zip.",
+      "translation": "",
+      "context": "error",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 87,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.messages.92": {
+      "source": "ROI loaded successfully!",
+      "translation": "",
+      "context": "success",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 92,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.messages.105": {
+      "source": "ROI conversion completed!",
+      "translation": "",
+      "context": "success",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 105,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.messages.117": {
+      "source": "Failed to convert ROI to Google Earth Engine format",
+      "translation": "",
+      "context": "error",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 117,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.messages.119": {
+      "source": "Geometry validation failed",
+      "translation": "",
+      "context": "error",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 119,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.messages.122": {
+      "source": "Error reading shapefile: ",
+      "translation": "",
+      "context": "error (f-string part)",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 122,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.messages.123": {
+      "source": "Make sure your shapefile includes all necessary files (.shp, .shx, .dbf, .prj)",
+      "translation": "",
+      "context": "info",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 123,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.messages.162": {
+      "source": "Please upload a valid ROI shapefile first.",
+      "translation": "",
+      "context": "error",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 162,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.messages.200": {
+      "source": "No spectral data was extracted. Please check your training data and image overlap.",
+      "translation": "",
+      "context": "error",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 200,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.messages.239": {
+      "source": "Separability analysis completed successfully!",
+      "translation": "",
+      "context": "success",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 239,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.messages.241": {
+      "source": "Error during analysis: ",
+      "translation": "",
+      "context": "error (f-string part)",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 241,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.messages.293": {
+      "source": "% of class pairs have good separability",
+      "translation": "",
+      "context": "success (f-string part)",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 293,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.messages.295": {
+      "source": "Moderate: ",
+      "translation": "",
+      "context": "warning (f-string part)",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 295,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.messages.297": {
+      "source": "Poor: Only ",
+      "translation": "",
+      "context": "error (f-string part)",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 297,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.messages.342": {
+      "source": " classes",
+      "translation": "",
+      "context": "success (f-string part)",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 342,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.messages.344": {
+      "source": "Add at least one class to complete this module",
+      "translation": "",
+      "context": "info",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 344,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.labels.43": {
+      "source": "Total Images",
+      "translation": "",
+      "context": "metric",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 43,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.labels.45": {
+      "source": "Date Range",
+      "translation": "",
+      "context": "metric",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 45,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.labels.47": {
+      "source": "Average Scene Cloud Cover",
+      "translation": "",
+      "context": "metric",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 47,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.labels.49": {
+      "source": "Preview Landsat Mosaic",
+      "translation": "",
+      "context": "checkbox",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 49,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.labels.65": {
+      "source": "Upload a zipped shapefile (.zip)",
+      "translation": "",
+      "context": "file_uploader",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 65,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.labels.133": {
+      "source": "Select the field containing numeric class IDs, (example: 1, 2, 3, 4, etc):",
+      "translation": "",
+      "context": "selectbox",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 133,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.labels.140": {
+      "source": "Select the field containing class names, (example: Forest, Water, Urban, etc.):",
+      "translation": "",
+      "context": "selectbox",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 140,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.labels.151": {
+      "source": "Select separability method:",
+      "translation": "",
+      "context": "radio",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 151,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.labels.154": {
+      "source": "Spatial resolution (meters):",
+      "translation": "",
+      "context": "number_input",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 154,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.labels.156": {
+      "source": "Maximum pixels per class:",
+      "translation": "",
+      "context": "number_input",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 156,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.labels.160": {
+      "source": "Run Separability Analysis",
+      "translation": "",
+      "context": "button",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 160,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.labels.252": {
+      "source": "Total Samples",
+      "translation": "",
+      "context": "metric",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 252,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.labels.255": {
+      "source": "Number of classess",
+      "translation": "",
+      "context": "metric",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 255,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.labels.259": {
+      "source": "Total Pixels Extracted",
+      "translation": "",
+      "context": "metric",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 259,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.labels.263": {
+      "source": "Method",
+      "translation": "",
+      "context": "metric",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 263,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.labels.328": {
+      "source": "⬅️ Back to Module 2: Classification Scheme",
+      "translation": "",
+      "context": "button",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 328,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.labels.334": {
+      "source": "➡️ Go to Module 4: Classification",
+      "translation": "",
+      "context": "button",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 334,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.labels.337": {
+      "source": "🔒 Complete Module 3 First",
+      "translation": "",
+      "context": "button",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 337,
+      "category": "labels",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.markdown_content.18": {
+      "source": "This module allow the user to perform separability analysis between the class in the region of interest (ROI). Prior to the analysis, the user must upload the ROI data in shapefile format. This data should contain unique the class ID and corresponding class names. After the ROI is uploaded, user can perform separability analysis using the following steps:",
+      "translation": "",
+      "context": "markdown",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 18,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.markdown_content.21": {
+      "source": "1. Define the training data attributes (class ID and class names)",
+      "translation": "",
+      "context": "markdown",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 21,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.markdown_content.22": {
+      "source": "2. Select separability parameters, which consist of selecting separability methods, spatial resolution, and maximum pixel per class. The platform support two methods, Jeffries-Matusita (JM) and Transformed Divergence (TD)",
+      "translation": "",
+      "context": "markdown",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 22,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.markdown_content.25": {
+      "source": "\nThis module is designed to perform separability analysis of the training data.\n",
+      "translation": "",
+      "context": "markdown variable",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 25,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.markdown_content.34": {
+      "source": "Availability of landsat data from module 1",
+      "translation": "",
+      "context": "markdown",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 34,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.markdown_content.64": {
+      "source": "currently the platform only support shapefile in .zip format",
+      "translation": "",
+      "context": "markdown",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 64,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.markdown_content.95": {
+      "source": "ROI table preview:",
+      "translation": "",
+      "context": "markdown",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 95,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.markdown_content.130": {
+      "source": "Select the appropriate fields from your ROI that correspond to numeric class IDs and class names.",
+      "translation": "",
+      "context": "markdown",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 130,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.markdown_content.310": {
+      "source": "*These class pairs have the lowest separability and may cause classification confusion:*",
+      "translation": "",
+      "context": "markdown",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 310,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.help_text.151": {
+      "source": "JM = Jeffries-Matusita Distance, TD = Transformed Divergence",
+      "translation": "",
+      "context": "radio.help",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 151,
+      "category": "help_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.help_text.154": {
+      "source": "Higher values = lower resolution but faster processing",
+      "translation": "",
+      "context": "number_input.help",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 154,
+      "category": "help_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.help_text.156": {
+      "source": "Lower values = faster processing but less representative sampling",
+      "translation": "",
+      "context": "number_input.help",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 156,
+      "category": "help_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.help_text.337": {
+      "source": "Please add at least one class to the classification scheme",
+      "translation": "",
+      "context": "button.help",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 337,
+      "category": "help_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.other_ui_text.111": {
+      "source": "Region of Interest distribution:",
+      "translation": "",
+      "context": "text",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 111,
+      "category": "other_ui_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.other_ui_text.172": {
+      "source": "Step 1/5: Initializing analyzer...",
+      "translation": "",
+      "context": "text",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 172,
+      "category": "other_ui_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.other_ui_text.185": {
+      "source": "Step 2/5: Computing ROI statistics...",
+      "translation": "",
+      "context": "text",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 185,
+      "category": "other_ui_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.other_ui_text.191": {
+      "source": "Step 3/5: Extracting spectral values... (This may take a few minutes)",
+      "translation": "",
+      "context": "text",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 191,
+      "category": "other_ui_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.other_ui_text.214": {
+      "source": "🔍 Step 4/5: Computing pixel statistics...",
+      "translation": "",
+      "context": "text",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 214,
+      "category": "other_ui_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.other_ui_text.227": {
+      "source": "Step 5/5: Running separability analysis...",
+      "translation": "",
+      "context": "text",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 227,
+      "category": "other_ui_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.other_ui_text.238": {
+      "source": "Analysis complete!",
+      "translation": "",
+      "context": "text",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 238,
+      "category": "other_ui_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.other_ui_text.242": {
+      "source": "Please check your ROI and analysis parameters, then try again.",
+      "translation": "",
+      "context": "write",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 242,
+      "category": "other_ui_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.other_ui_text.271": {
+      "source": "No sample statistics available",
+      "translation": "",
+      "context": "write",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 271,
+      "category": "other_ui_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.other_ui_text.277": {
+      "source": "No pixel statistics available",
+      "translation": "",
+      "context": "write",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 277,
+      "category": "other_ui_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.other_ui_text.299": {
+      "source": "No separability summary available",
+      "translation": "",
+      "context": "write",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 299,
+      "category": "other_ui_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.other_ui_text.305": {
+      "source": "No detailed separability results available",
+      "translation": "",
+      "context": "write",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 305,
+      "category": "other_ui_text",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.other_ui_text.313": {
+      "source": "No problematic pairs data available",
+      "translation": "",
+      "context": "write",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 313,
+      "category": "other_ui_text",
+      "status": "untranslated",
+      "notes": ""
+    }
+  }
+}
