@@ -32,12 +32,23 @@ def create_translation_template():
     
     # Generate unique string IDs and create translation entries
     string_count = 0
+    string_index = 0  # Add index for duplicate line numbers
+    seen_keys = {}  # Track seen keys
+    
     for filename, categories in data.items():
         for category, strings in categories.items():
             for item in strings:
                 # Create a unique key for this string
-                # Format: filename.category.line_number
-                key = f"{filename.replace('.py', '')}.{category}.{item['line']}"
+                # Format: filename.category.line_number or filename.category.line_number_N for duplicates
+                base_key = f"{filename.replace('.py', '')}.{category}.{item['line']}"
+                
+                # Handle duplicates by adding an index
+                if base_key in seen_keys:
+                    seen_keys[base_key] += 1
+                    key = f"{base_key}_{seen_keys[base_key]}"
+                else:
+                    seen_keys[base_key] = 0
+                    key = base_key
                 
                 template["translations"][key] = {
                     "source": item['text'],

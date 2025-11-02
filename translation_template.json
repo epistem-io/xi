@@ -208,6 +208,16 @@
       "notes": ""
     },
     "1_Module_1_Generate_Image_Mosaic.messages.177": {
+      "source": "Found ",
+      "translation": "",
+      "context": "success (f-string part)",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 177,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.messages.177_1": {
       "source": " images.",
       "translation": "",
       "context": "success (f-string part)",
@@ -248,6 +258,16 @@
       "notes": ""
     },
     "1_Module_1_Generate_Image_Mosaic.messages.325": {
+      "source": "✅ Export task '",
+      "translation": "",
+      "context": "success (f-string part)",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 325,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.messages.325_1": {
       "source": "' submitted successfully!",
       "translation": "",
       "context": "success (f-string part)",
@@ -568,6 +588,36 @@
       "notes": ""
     },
     "1_Module_1_Generate_Image_Mosaic.markdown_content.327": {
+      "source": "\n                    **Export Details:**\n                    - File location: Google Drive/",
+      "translation": "",
+      "context": "markdown (f-string part)",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 327,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.markdown_content.327_1": {
+      "source": ".tif\n                    - CRS: ",
+      "translation": "",
+      "context": "markdown (f-string part)",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 327,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.markdown_content.327_2": {
+      "source": "\n                    - Resolution: ",
+      "translation": "",
+      "context": "markdown (f-string part)",
+      "file": "1_Module_1_Generate_Image_Mosaic.py",
+      "line": 327,
+      "category": "markdown_content",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "1_Module_1_Generate_Image_Mosaic.markdown_content.327_3": {
       "source": "m\n                    \n                    Check progress in the [Earth Engine Task Manager](https://code.earthengine.google.com/tasks)\n                    ",
       "translation": "",
       "context": "markdown (f-string part)",
@@ -728,6 +778,16 @@
       "notes": ""
     },
     "2_Module_2_Classification_scheme.messages.117": {
+      "source": "✅ Classification scheme completed with ",
+      "translation": "",
+      "context": "success (f-string part)",
+      "file": "2_Module_2_Classification_scheme.py",
+      "line": 117,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "2_Module_2_Classification_scheme.messages.117_1": {
       "source": " classes",
       "translation": "",
       "context": "success (f-string part)",
@@ -1128,6 +1188,16 @@
       "notes": ""
     },
     "3_Module_3-4_Analyze_ROI.messages.293": {
+      "source": "Excellent! ",
+      "translation": "",
+      "context": "success (f-string part)",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 293,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.messages.293_1": {
       "source": "% of class pairs have good separability",
       "translation": "",
       "context": "success (f-string part)",
@@ -1158,6 +1228,16 @@
       "notes": ""
     },
     "3_Module_3-4_Analyze_ROI.messages.342": {
+      "source": "✅ Classification scheme completed with ",
+      "translation": "",
+      "context": "success (f-string part)",
+      "file": "3_Module_3-4_Analyze_ROI.py",
+      "line": 342,
+      "category": "messages",
+      "status": "untranslated",
+      "notes": ""
+    },
+    "3_Module_3-4_Analyze_ROI.messages.342_1": {
       "source": " classes",
       "translation": "",
       "context": "success (f-string part)",
