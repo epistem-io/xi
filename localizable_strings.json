@@ -1,0 +1,1067 @@
+{
+  "home.py": {
+    "titles_headers": [
+      {
+        "text": "About",
+        "line": 12,
+        "context": "title",
+        "file": "home.py"
+      },
+      {
+        "text": "Epistem land cover mapping platform demo",
+        "line": 18,
+        "context": "title",
+        "file": "home.py"
+      },
+      {
+        "text": "Instructions",
+        "line": 26,
+        "context": "header",
+        "file": "home.py"
+      }
+    ],
+    "messages": [],
+    "labels": [],
+    "markdown_content": [
+      {
+        "text": "\nAn working example module 1 and 3 of Epistem land cover mapping platform. Adapted from:\n<https://github.com/opengeos/streamlit-map-template>\n",
+        "line": 7,
+        "context": "markdown variable",
+        "file": "home.py"
+      },
+      {
+        "text": "\n    This multipage platform aims to demonstrate a working example of epistem's first module, aim to generate a Landsat imagery for certain area of interest.\n    ",
+        "line": 20,
+        "context": "markdown",
+        "file": "home.py"
+      },
+      {
+        "text": "\n1. Define the area of interest by drawing a rectangle on the map or upload a shapefile (zip).\n2. Specified the acqusition year of date. If you just type the year, the map will automatically filtered image from January 1 all the way to December 31.\n3. Specified the cloud cover percentage and sensor type (currently support Landsat 5 TM - Landsat 9 OLI2).\n4. click run to generate the mosaic image.\n",
+        "line": 28,
+        "context": "markdown variable",
+        "file": "home.py"
+      }
+    ],
+    "help_text": [],
+    "other_ui_text": []
+  },
+  "1_Module_1_Generate_Image_Mosaic.py": {
+    "titles_headers": [
+      {
+        "text": "Search and Generate Landsat Image Mosaic",
+        "line": 15,
+        "context": "title",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "About",
+        "line": 22,
+        "context": "title",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Upload Area of Interest (Shapefile)",
+        "line": 41,
+        "context": "subheader",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Specify Imagery Search Criteria",
+        "line": 103,
+        "context": "subheader",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Select Time Period",
+        "line": 133,
+        "context": "subheader",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Export Mosaic to Google Drive",
+        "line": 250,
+        "context": "subheader",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Module Navigation",
+        "line": 342,
+        "context": "subheader",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      }
+    ],
+    "messages": [
+      {
+        "text": "No .shp file found in the uploaded zip.",
+        "line": 66,
+        "context": "error",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Shapefile loaded successfully!",
+        "line": 71,
+        "context": "success",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "AOI conversion completed!",
+        "line": 82,
+        "context": "success",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Failed to convert AOI to Google Earth Engine format",
+        "line": 93,
+        "context": "error",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Geometry validation failed",
+        "line": 95,
+        "context": "error",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Error reading shapefile: ",
+        "line": 98,
+        "context": "error (f-string part)",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Make sure your shapefile includes all necessary files (.shp, .shx, .dbf, .prj)",
+        "line": 99,
+        "context": "info",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Found ",
+        "line": 177,
+        "context": "success (f-string part)",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": " images.",
+        "line": 177,
+        "context": "success (f-string part)",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Failed to query collection size: ",
+        "line": 189,
+        "context": "error (f-string part)",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "No images found for the selected criteria, increase cloud cover threshold or change the date range.",
+        "line": 194,
+        "context": "warning",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Upload an AOI and specify search criteria to begin.",
+        "line": 246,
+        "context": "info",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "✅ Export task '",
+        "line": 325,
+        "context": "success (f-string part)",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "' submitted successfully!",
+        "line": 325,
+        "context": "success (f-string part)",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Task ID: ",
+        "line": 326,
+        "context": "info (f-string part)",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Export failed: ",
+        "line": 336,
+        "context": "error (f-string part)",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Debugging info:",
+        "line": 337,
+        "context": "info",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Please Generate an imagery mosaic before proceeding",
+        "line": 348,
+        "context": "info",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      }
+    ],
+    "labels": [
+      {
+        "text": "Upload a zipped shapefile (.zip)",
+        "line": 43,
+        "context": "file_uploader",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Select Landsat Sensor:",
+        "line": 129,
+        "context": "selectbox",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Choose date selection mode:",
+        "line": 135,
+        "context": "radio",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Select Year",
+        "line": 146,
+        "context": "selectbox",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Start Date:",
+        "line": 154,
+        "context": "date_input",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "End Date:",
+        "line": 155,
+        "context": "date_input",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Maximum Cloud Cover (%):",
+        "line": 160,
+        "context": "slider",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Search Landsat Imagery",
+        "line": 163,
+        "context": "button",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Export Filename:",
+        "line": 256,
+        "context": "text_input",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Google Drive Folder:",
+        "line": 261,
+        "context": "text_input",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Coordinate Reference System:",
+        "line": 271,
+        "context": "selectbox",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Enter EPSG Code:",
+        "line": 277,
+        "context": "text_input",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Pixel Size (meters):",
+        "line": 284,
+        "context": "number_input",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Start Export to Google Drive",
+        "line": 290,
+        "context": "button",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Go to Module 2: Classification Scheme",
+        "line": 344,
+        "context": "button",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "🔒 Complete Module 1 First",
+        "line": 347,
+        "context": "button",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      }
+    ],
+    "markdown_content": [
+      {
+        "text": "\nThis module allows users to search and generate a Landsat image mosaic for a specified area of interest (AOI) and time range using Google Earth Engine (GEE) data.\n",
+        "line": 18,
+        "context": "markdown variable",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "currently the platform only support shapefile in .zip format",
+        "line": 42,
+        "context": "markdown",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "1. Landsat 1 Multispectral Scanner/MSS (1972 - 1978)",
+        "line": 106,
+        "context": "markdown",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "2. Landsat 2 Multispectral Scanner/MSS (1978 - 1982)",
+        "line": 107,
+        "context": "markdown",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "3. Landsat 3 Multispectral Scanner/MSS (1978 - 1983)",
+        "line": 108,
+        "context": "markdown",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "3. Landsat 4 Thematic Mapper/TM (1982 - 1993)",
+        "line": 109,
+        "context": "markdown",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "4. Landsat 5 Thematic Mapper/TM (1984 - 2012)",
+        "line": 110,
+        "context": "markdown",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "5. Landsat 7 Enhanced Thematic Mapper Plus/ETM+ (1999 - 2021)",
+        "line": 111,
+        "context": "markdown",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "6. Landsat 8 Operational Land Imager/OLI (2013 - present)",
+        "line": 112,
+        "context": "markdown",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "7. Landsat 9 Operational Land Imager-2/OLI-2 (2021 - present)",
+        "line": 113,
+        "context": "markdown",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "If 'select by year' is choosen, the system automatically search imagery from January 1 untill December 31 ",
+        "line": 134,
+        "context": "markdown",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "\n                    **Export Details:**\n                    - File location: Google Drive/",
+        "line": 327,
+        "context": "markdown (f-string part)",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": ".tif\n                    - CRS: ",
+        "line": 327,
+        "context": "markdown (f-string part)",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "\n                    - Resolution: ",
+        "line": 327,
+        "context": "markdown (f-string part)",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "m\n                    \n                    Check progress in the [Earth Engine Task Manager](https://code.earthengine.google.com/tasks)\n                    ",
+        "line": 327,
+        "context": "markdown (f-string part)",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      }
+    ],
+    "help_text": [
+      {
+        "text": "The output will be saved as GeoTIFF (.tif)",
+        "line": 256,
+        "context": "text_input.help",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Google Drive Folder to stored the result",
+        "line": 261,
+        "context": "text_input.help",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Example: 3278 (UTM Zone 48S)",
+        "line": 277,
+        "context": "text_input.help",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      }
+    ],
+    "other_ui_text": [
+      {
+        "text": "Area of interest preview:",
+        "line": 87,
+        "context": "text",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Enter the acquisition date range, cloud cover percentage, and Landsat mission type. Current platform support Landsat 1-4 at sensor radiance and Landsat 5-9 Collection 2 Surface Reflectance Analysis Ready Data (ARD), excluding the thermal bands. Landsat mission avaliability is as follows:",
+        "line": 104,
+        "context": "text",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Collection size: ",
+        "line": 191,
+        "context": "write (f-string part)",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "AOI type: ",
+        "line": 338,
+        "context": "write (f-string part)",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      },
+      {
+        "text": "Composite exists: ",
+        "line": 339,
+        "context": "write (f-string part)",
+        "file": "1_Module_1_Generate_Image_Mosaic.py"
+      }
+    ]
+  },
+  "2_Module_2_Classification_scheme.py": {
+    "titles_headers": [
+      {
+        "text": "Define Land Cover Land Use Classification Scheme",
+        "line": 4,
+        "context": "title",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "About",
+        "line": 16,
+        "context": "title",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "Add a new class",
+        "line": 27,
+        "context": "subheader",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "Classification Scheme",
+        "line": 66,
+        "context": "subheader",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "Module Navigation",
+        "line": 93,
+        "context": "subheader",
+        "file": "2_Module_2_Classification_scheme.py"
+      }
+    ],
+    "messages": [
+      {
+        "text": "Please fill in all fields.",
+        "line": 42,
+        "context": "warning",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "No classes added yet. Please add at least one class.",
+        "line": 88,
+        "context": "info",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "✅ Classification scheme completed with ",
+        "line": 117,
+        "context": "success (f-string part)",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": " classes",
+        "line": 117,
+        "context": "success (f-string part)",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "Add at least one class to complete this module",
+        "line": 119,
+        "context": "info",
+        "file": "2_Module_2_Classification_scheme.py"
+      }
+    ],
+    "labels": [
+      {
+        "text": "Class ID",
+        "line": 30,
+        "context": "text_input",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "Class Name",
+        "line": 31,
+        "context": "text_input",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "Color Code",
+        "line": 32,
+        "context": "color_picker",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "Add Class",
+        "line": 33,
+        "context": "form_submit_button",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "Edit Class ID",
+        "line": 49,
+        "context": "text_input",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "Edit Class Name",
+        "line": 50,
+        "context": "text_input",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "Edit Color Code",
+        "line": 51,
+        "context": "color_picker",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "Save Changes",
+        "line": 52,
+        "context": "form_submit_button",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "Cancel",
+        "line": 53,
+        "context": "form_submit_button",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "Edit",
+        "line": 72,
+        "context": "button",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "Delete",
+        "line": 74,
+        "context": "button",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "Download Classification Scheme as CSV",
+        "line": 81,
+        "context": "download_button.label",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "⬅️ Back to Module 1: Generate Mosaic",
+        "line": 103,
+        "context": "button",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "➡️ Go to Module 3-4: Training Data Analysis",
+        "line": 109,
+        "context": "button",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "🔒 Complete Module 2 First",
+        "line": 112,
+        "context": "button",
+        "file": "2_Module_2_Classification_scheme.py"
+      }
+    ],
+    "markdown_content": [
+      {
+        "text": "\nIn this module, users can define their own land cover land use (LCLU) classification scheme by specifying unique class ID, names and corresponding color codes. The defined scheme can be saved as a CSV file for future use in land cover classification tasks.\n",
+        "line": 7,
+        "context": "markdown variable",
+        "file": "2_Module_2_Classification_scheme.py"
+      },
+      {
+        "text": "User must define the desired land cover land use classification scheme. The class ID is a unique identifier for each land cover type, the class name is a descriptive label, and the color code is used for visual representation on maps. Users can add multiple classes, edit existing ones, and delete any unnecessary entries. Once the classification scheme is finalized, it can be downloaded as a CSV file for easy integration into other modules",
+        "line": 11,
+        "context": "markdown",
+        "file": "2_Module_2_Classification_scheme.py"
+      }
+    ],
+    "help_text": [
+      {
+        "text": "Please add at least one class to the classification scheme",
+        "line": 112,
+        "context": "button.help",
+        "file": "2_Module_2_Classification_scheme.py"
+      }
+    ],
+    "other_ui_text": []
+  },
+  "3_Module_3-4_Analyze_ROI.py": {
+    "titles_headers": [
+      {
+        "text": "Analzye the Separability of Region of Interest (ROI)",
+        "line": 16,
+        "context": "title",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "About",
+        "line": 29,
+        "context": "title",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "A. Upload Region of Interest (Shapefile)",
+        "line": 63,
+        "context": "subheader",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "B. Perform Separability Analysis",
+        "line": 129,
+        "context": "subheader",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Analysis Parameters",
+        "line": 150,
+        "context": "subheader",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "C. Analysis Results",
+        "line": 246,
+        "context": "subheader",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Module Navigation",
+        "line": 318,
+        "context": "subheader",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      }
+    ],
+    "messages": [
+      {
+        "text": "Landsat mosaic available from Module 1!",
+        "line": 37,
+        "context": "success",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Landsat mosaic not found. Please run Module 1 first.",
+        "line": 59,
+        "context": "warning",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "No .shp file found in the uploaded zip.",
+        "line": 87,
+        "context": "error",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "ROI loaded successfully!",
+        "line": 92,
+        "context": "success",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "ROI conversion completed!",
+        "line": 105,
+        "context": "success",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Failed to convert ROI to Google Earth Engine format",
+        "line": 117,
+        "context": "error",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Geometry validation failed",
+        "line": 119,
+        "context": "error",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Error reading shapefile: ",
+        "line": 122,
+        "context": "error (f-string part)",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Make sure your shapefile includes all necessary files (.shp, .shx, .dbf, .prj)",
+        "line": 123,
+        "context": "info",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Please upload a valid ROI shapefile first.",
+        "line": 162,
+        "context": "error",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "No spectral data was extracted. Please check your training data and image overlap.",
+        "line": 200,
+        "context": "error",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Separability analysis completed successfully!",
+        "line": 239,
+        "context": "success",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Error during analysis: ",
+        "line": 241,
+        "context": "error (f-string part)",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Excellent! ",
+        "line": 293,
+        "context": "success (f-string part)",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "% of class pairs have good separability",
+        "line": 293,
+        "context": "success (f-string part)",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Moderate: ",
+        "line": 295,
+        "context": "warning (f-string part)",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Poor: Only ",
+        "line": 297,
+        "context": "error (f-string part)",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "✅ Classification scheme completed with ",
+        "line": 342,
+        "context": "success (f-string part)",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": " classes",
+        "line": 342,
+        "context": "success (f-string part)",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Add at least one class to complete this module",
+        "line": 344,
+        "context": "info",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      }
+    ],
+    "labels": [
+      {
+        "text": "Total Images",
+        "line": 43,
+        "context": "metric",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Date Range",
+        "line": 45,
+        "context": "metric",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Average Scene Cloud Cover",
+        "line": 47,
+        "context": "metric",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Preview Landsat Mosaic",
+        "line": 49,
+        "context": "checkbox",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Upload a zipped shapefile (.zip)",
+        "line": 65,
+        "context": "file_uploader",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Select the field containing numeric class IDs, (example: 1, 2, 3, 4, etc):",
+        "line": 133,
+        "context": "selectbox",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Select the field containing class names, (example: Forest, Water, Urban, etc.):",
+        "line": 140,
+        "context": "selectbox",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Select separability method:",
+        "line": 151,
+        "context": "radio",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Spatial resolution (meters):",
+        "line": 154,
+        "context": "number_input",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Maximum pixels per class:",
+        "line": 156,
+        "context": "number_input",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Run Separability Analysis",
+        "line": 160,
+        "context": "button",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Total Samples",
+        "line": 252,
+        "context": "metric",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Number of classess",
+        "line": 255,
+        "context": "metric",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Total Pixels Extracted",
+        "line": 259,
+        "context": "metric",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Method",
+        "line": 263,
+        "context": "metric",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "⬅️ Back to Module 2: Classification Scheme",
+        "line": 328,
+        "context": "button",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "➡️ Go to Module 4: Classification",
+        "line": 334,
+        "context": "button",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "🔒 Complete Module 3 First",
+        "line": 337,
+        "context": "button",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      }
+    ],
+    "markdown_content": [
+      {
+        "text": "This module allow the user to perform separability analysis between the class in the region of interest (ROI). Prior to the analysis, the user must upload the ROI data in shapefile format. This data should contain unique the class ID and corresponding class names. After the ROI is uploaded, user can perform separability analysis using the following steps:",
+        "line": 18,
+        "context": "markdown",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "1. Define the training data attributes (class ID and class names)",
+        "line": 21,
+        "context": "markdown",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "2. Select separability parameters, which consist of selecting separability methods, spatial resolution, and maximum pixel per class. The platform support two methods, Jeffries-Matusita (JM) and Transformed Divergence (TD)",
+        "line": 22,
+        "context": "markdown",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "\nThis module is designed to perform separability analysis of the training data.\n",
+        "line": 25,
+        "context": "markdown variable",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Availability of landsat data from module 1",
+        "line": 34,
+        "context": "markdown",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "currently the platform only support shapefile in .zip format",
+        "line": 64,
+        "context": "markdown",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "ROI table preview:",
+        "line": 95,
+        "context": "markdown",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Select the appropriate fields from your ROI that correspond to numeric class IDs and class names.",
+        "line": 130,
+        "context": "markdown",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "*These class pairs have the lowest separability and may cause classification confusion:*",
+        "line": 310,
+        "context": "markdown",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      }
+    ],
+    "help_text": [
+      {
+        "text": "JM = Jeffries-Matusita Distance, TD = Transformed Divergence",
+        "line": 151,
+        "context": "radio.help",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Higher values = lower resolution but faster processing",
+        "line": 154,
+        "context": "number_input.help",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Lower values = faster processing but less representative sampling",
+        "line": 156,
+        "context": "number_input.help",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Please add at least one class to the classification scheme",
+        "line": 337,
+        "context": "button.help",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      }
+    ],
+    "other_ui_text": [
+      {
+        "text": "Region of Interest distribution:",
+        "line": 111,
+        "context": "text",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Step 1/5: Initializing analyzer...",
+        "line": 172,
+        "context": "text",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Step 2/5: Computing ROI statistics...",
+        "line": 185,
+        "context": "text",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Step 3/5: Extracting spectral values... (This may take a few minutes)",
+        "line": 191,
+        "context": "text",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "🔍 Step 4/5: Computing pixel statistics...",
+        "line": 214,
+        "context": "text",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Step 5/5: Running separability analysis...",
+        "line": 227,
+        "context": "text",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Analysis complete!",
+        "line": 238,
+        "context": "text",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "Please check your ROI and analysis parameters, then try again.",
+        "line": 242,
+        "context": "write",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "No sample statistics available",
+        "line": 271,
+        "context": "write",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "No pixel statistics available",
+        "line": 277,
+        "context": "write",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "No separability summary available",
+        "line": 299,
+        "context": "write",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "No detailed separability results available",
+        "line": 305,
+        "context": "write",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      },
+      {
+        "text": "No problematic pairs data available",
+        "line": 313,
+        "context": "write",
+        "file": "3_Module_3-4_Analyze_ROI.py"
+      }
+    ]
+  }
+}
