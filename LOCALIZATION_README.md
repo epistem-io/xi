@@ -10,6 +10,7 @@ The `extract_localizable_strings.py` script analyzes Python files in the Streaml
 
 1. **`localizable_strings.json`** - Structured JSON file containing all extracted strings
 2. **`localizable_strings_report.txt`** - Human-readable report of all strings
+3. **`localizable_strings.csv`** - CSV format for spreadsheet applications and translators
 
 ## What Strings are Extracted?
 
@@ -57,6 +58,16 @@ This will:
 - Scan all Python files in the `pages/` directory
 - Generate `localizable_strings.json`
 - Generate `localizable_strings_report.txt`
+
+### Generating CSV Format
+
+For easier review in spreadsheet applications or distribution to translators:
+
+```bash
+python json_to_csv.py
+```
+
+This creates `localizable_strings.csv` with columns for translation and notes.
 
 ### Output Format
 
