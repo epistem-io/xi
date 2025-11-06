@@ -40,14 +40,14 @@ load_css()
 
 #=========Page requirements (title, description, session state)===========
 #title of the module
-st.title("Acquisition of Near-Cloud-Free Satellite Imagery")
+st.title("Cari dan Buat Gabungan Citra Satelit")
 st.divider()
 #module name
 markdown = """
-This module allows users to search and generate a Landsat image mosaic for a specified area of interest (AOI) and time range using Google Earth Engine (GEE) data.
+Modul ini memungkinkan pengguna untuk mencari dan menghasilkan gabungan citra satelit untuk area minat dan rentang waktu yang anda tentukan, menggunakan data katalog Google Earth Engine (GEE).
 """
 #set page layout and side info
-st.sidebar.title("About")
+st.sidebar.title("Tentang Wahana")
 st.sidebar.info(markdown)
 logo = "logos/logo_epistem.png"
 st.sidebar.image(logo)
@@ -109,12 +109,12 @@ def get_active_tasks():
 
 #Based on early experiments, shapefile with complex geometry often cause issues in GEE
 #User input, AOI upload
-st.subheader("Upload Area of Interest (Shapefile)")
-st.markdown("currently the platform only support shapefile in .zip format")
+st.subheader("Unggah Area Minat (Shapefile)")
+st.markdown("Saat ini, wahana hanya mendukung shapefile dalam format berkas .zip.")
 
 
 #=========1. Area of Interest Definition (upload an AOI)===========
-uploaded_file = st.file_uploader("Upload a zipped shapefile (.zip)", type=["zip"])
+uploaded_file = st.file_uploader("Unggah shapefile dalam berkas .zip", type=["zip"])
 aoi = None
 #create a code for uploading the shapefile (what happen if the shapefile is uploaded)
 if uploaded_file:
@@ -136,12 +136,12 @@ if uploaded_file:
                     shp_files.append(os.path.join(root, fname))
 
         if len(shp_files) == 0:
-            st.error("No .shp file found in the uploaded zip.")
+            st.error("Shapefile tidak ditemukan dalam berkas zip yang diunggah.")
         else:
             #read the shapefile using geopandas
             try:
                 gdf = gpd.read_file(shp_files[0])
-                st.success("Shapefile loaded successfully!")
+                st.success("Berkas (Shapefile) berhasil dimuat!")
                 #(System Response 1.1: Area of Interest Definition)
                 #initialize the validator and converter 
                 validate = shapefile_validator(verbose=False)
@@ -152,7 +152,7 @@ if uploaded_file:
                 if gdf_cleaned is not None:
                     aoi = converter.convert_aoi_gdf(gdf_cleaned)
                     if aoi is not None:
-                        st.success("AOI conversion completed!")
+                        st.success("Area Minat berhasil diproses!")
                         st.session_state.aoi = aoi
                         st.session_state.gdf = gdf_cleaned
                         
@@ -163,19 +163,19 @@ if uploaded_file:
                         preview_map.add_geojson(gdf_cleaned.__geo_interface__, layer_name="AOI")
                         preview_map.to_streamlit(height=500)
                     else:
-                        st.error("Failed to convert AOI to Google Earth Engine format")
+                        st.error("Gagal memuat Area Minat ke server")
                 else:
-                    st.error("Geometry validation failed")
+                    st.error("Validasi Geometri gagal.")
                     
             except Exception as e:
                 st.error(f"Error reading shapefile: {e}")
-                st.info("Make sure your shapefile includes all necessary files (.shp, .shx, .dbf, .prj)")
+                st.info("Pastikan Shapefile Anda memuat semua berkas yang diperlukan (.shp, .shx, .dbf, .prj).")
 
 
 #=========2. User input for image search criteria===========
 st.divider()
 #User input, search criteria
-st.subheader("Specify Imagery Search Criteria")
+st.subheader("Tentukan Kriteria Pencarian Citra")
 
 #Dump some information for supported imagery in the platform
 st.markdown("""
@@ -195,7 +195,7 @@ st.markdown("""
 """)
 
 #Date selection first - this will filter available sensors
-st.subheader("Select Time Period")
+st.subheader("Pilih Periode Waktu")
 st.markdown("If 'select by year' is chosen, the system automatically searches imagery from January 1 until December 31")
 date_mode = st.radio(
     "Choose date selection mode:",
@@ -208,7 +208,7 @@ if date_mode == "Select by year":
     years = list(range(1972, datetime.datetime.now().year + 1))
     years.reverse()  #Newest First
 
-    year = st.selectbox("Select Year", years, index=years.index(2020))
+    year = st.selectbox("Pilih tahun", years, index=years.index(2020))
     start_date = str(year)
     end_date = str(year)
     selected_year = year
@@ -217,8 +217,8 @@ else:
     # Full date inputs
     default_start = datetime.date(2020, 1, 1)
     default_end = datetime.date(2020, 12, 31)
-    start_date_dt = st.date_input("Start Date:", default_start)
-    end_date_dt = st.date_input("End Date:", default_end)
+    start_date_dt = st.date_input("Tanggal mulai:", default_start)
+    end_date_dt = st.date_input("Tanggal selesai:", default_end)
     start_date = start_date_dt.strftime("%Y-%m-%d")
     end_date = end_date_dt.strftime("%Y-%m-%d")
     selected_year = start_date_dt.year
@@ -262,11 +262,11 @@ selected_sensor_name = st.selectbox(
 optical_data = available_sensors[selected_sensor_name]  #passing to backend process
 
 #cloud cover slider
-cloud_cover = st.slider("Maximum Scene Cloud Cover (%):", 0, 100, 30)
+cloud_cover = st.slider("Batas Maksimum Tutupan Awan (%):", 0, 100, 30)
 
 #=========3. Passing user input to backend codes ===========
 #What happend when the button is pres by the user
-if st.button("Search Landsat Imagery", type="primary") and st.session_state.aoi is not None:
+if st.button("Cari citra satelit", type="primary") and st.session_state.aoi is not None:
     with st.spinner("Searching for Landsat imagery..."):
         #first, search multispectral data (Collection 2 Tier 1, SR data)
 
@@ -311,7 +311,7 @@ if st.button("Search Landsat Imagery", type="primary") and st.session_state.aoi 
             coll_size = 0
 
         if coll_size == 0:
-            st.warning("No images found for the selected criteria, increase cloud cover threshold,  change the date range, or make sure the acquisition date aligned with Landsat Mission Avaliability.")
+            st.warning("Tidak ada citra yang ditemukan. Coba: a) Naikkan batas tutupan awan, atau b) Ubah periode waktu/tanggal.")
 
     #get valid pixels (number of cloudless pixel in date range)
     #valid_px = collection.reduce(ee.Reducer.count()).clip(aoi)
@@ -377,7 +377,7 @@ if st.button("Search Landsat Imagery", type="primary") and st.session_state.aoi 
             )
             #Show cloud cover statistics
             if cloud_covers:
-                st.markdown("#### Cloud Cover Statistics")
+                st.markdown("#### Statistik Tutupan Awan")
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     st.metric("Minimum", f"{min(cloud_covers):.2f}%")
@@ -389,13 +389,13 @@ if st.button("Search Landsat Imagery", type="primary") and st.session_state.aoi 
             #Download button
             csv = scene_df.to_csv(index=False).encode('utf-8')
             st.download_button(
-                label="Download Scene List as CSV",
+                label="Unduh Daftar Citra sebagai CSV",
                 data=csv,
                 file_name=f"landsat_scenes_{start_date}_{end_date}.csv",
                 mime="text/csv"
             )
         else:
-            st.info("No scene data available to display")
+            st.info("Tidak ada data citra untuk ditampilkan")
     #st.subheader("Detailed Statistics") {'bands': ['RED', 'GREEN', 'BLUE'], 'min': 0, 'max': 0.3}
     #st.write(detailed_stats)
     if detailed_stats['total_images'] > 0:
@@ -429,12 +429,12 @@ if st.button("Search Landsat Imagery", type="primary") and st.session_state.aoi 
         m.add_geojson(gdf.__geo_interface__, layer_name="AOI", shown = False)
         m.to_streamlit(height=600)   
 else:
-    st.info("Upload an AOI and specify search criteria to begin.")
+    st.info("Unggah Area Minat dan tentukan kriteria pencarian untuk memulai.")
 
 #=========5. Exporting the image collection===========
 #check if the session state is not empty
 if st.session_state.composite is not None and st.session_state.aoi is not None:
-    st.subheader("Export Imagery to Google Drive")
+    st.subheader("Simpan Gabungan Citra ke Google Drive")
     #Create an export setting for the user to filled
     with st.expander("Export Settings", expanded=True):
         col1 = st.columns(1)
@@ -443,7 +443,7 @@ if st.session_state.composite is not None and st.session_state.aoi is not None:
         export_name = st.text_input(
                 "Export Filename:",
                 value=default_name,
-                help="The output will be saved as GeoTIFF (.tif)"
+                help="Hasil akan disimpan dalam format GeoTIFF (.tif)"
             )
         #Hardcoded folder location so that the export is in one location
         #Located in My Drive/EPISTEM/EPISTEMX_Landsat_Export folder structure
@@ -553,18 +553,18 @@ if st.session_state.composite is not None and st.session_state.aoi is not None:
                     
             except Exception as e:
                 st.error(f"Export failed: {str(e)}")
-                st.info("Debugging info:")
+                st.info("Informasi Pemecahan Masalah:")
                 st.write(f"AOI type: {type(st.session_state.aoi)}")
                 st.write(f"Composite exists: {st.session_state.composite is not None}")
 
     #Earth Engine Export Task Monitor
     if st.session_state.export_tasks:
-        st.subheader("Earth Engine Export Monitor")
+        st.subheader("Monitor Ekspor Earth Engine")
         
         # Manual refresh options with cache control
         col_refresh1, col_refresh2 = st.columns([1, 3])
         with col_refresh1:
-            if st.button("🔄 Refresh All"):
+            if st.button("🔄 Segarkan Semua"):
                 # Clear cache to force fresh data
                 st.session_state.task_cache.clear()
                 st.session_state.last_cache_update.clear()
@@ -762,7 +762,7 @@ if st.session_state.composite is not None and st.session_state.aoi is not None:
                 pass
         
         if completed_tasks:
-            if st.button("🗑️ Clear All Completed Tasks"):
+            if st.button("🗑️ Hapus Semua Tugas Selesai"):
                 st.session_state.export_tasks = [
                     task for task in st.session_state.export_tasks 
                     if task not in completed_tasks
@@ -771,11 +771,11 @@ if st.session_state.composite is not None and st.session_state.aoi is not None:
 
 # Navigation
 st.divider()
-st.subheader("Module Navigation")
+st.subheader("Navigasi modul")
 
 if st.session_state.composite is not None:
-    if st.button("Go to Module 2: Classification Scheme"):
+    if st.button("Lanjut ke Modul 2: Tentukan Skema Klasifikasi"):
         st.switch_page("pages/2_Module_2_Classification_scheme.py")
 else:
     st.button("🔒 Complete Module 1 First", disabled=True)
-    st.info("Please generate an imagery mosaic before proceeding")
+    st.info("Buat Gabungan Citra terlebih dahulu sebelum melanjutkan.")

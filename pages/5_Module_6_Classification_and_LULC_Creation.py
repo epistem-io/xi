@@ -49,8 +49,8 @@ Modul 1 menghasilkan gabungan citra, Modul 2 mendefinisikan skema kelas, Modul 3
 """)
 
 #Sidebar info
-st.sidebar.title("About")
-st.sidebar.info("Module for generating a classification map based on Statistical Machine Intellegence and Learning (SMILE) Random Forest classifier")
+st.sidebar.title("Tentang")
+st.sidebar.info("Modul untuk menghasilkan peta klasifikasi berdasarkan Statistical Machine Intelligence and Learning (SMILE) Random Forest classifier")
 logo = "logos/logo_epistem.png"
 st.sidebar.image(logo)
 
@@ -69,7 +69,7 @@ with col1:
         # Display metadata if available
         if 'Image_metadata' in st.session_state:
             metadata = st.session_state['Image_metadata']
-            with st.expander("Image Details"):
+            with st.expander("Detail Citra"):
                 st.write(f"**Sensor:** {st.session_state.get('search_metadata', {}).get('sensor', 'N/A')}")
                 st.write(f"**Date Range:** {metadata.get('date_range', 'N/A')}")
                 st.write(f"**Total Images:** {metadata.get('total_images', 'N/A')}")
@@ -88,7 +88,7 @@ with col2:
         # Display training data info if available
         if 'training_gdf' in st.session_state:
             gdf = st.session_state['training_gdf']
-            with st.expander("Training Data Details"):
+            with st.expander("Detail Data Pelatihan"):
                 st.write(f"**Total Features:** {len(gdf)}")
                 st.write(f"**Columns:** {', '.join(gdf.columns.tolist())}")
                 
@@ -186,27 +186,27 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(["Ekstraksi Fitur/Nilai Piksel", "Latih M
 #Option to either use all of the training data for classification, or split them into train and test data
 #This section can be change to module 3 (?)
 with tab1:
-    st.header("Feature Extraction Configuration")
+    st.header("Pengaturan ekstraksi data citra")
     markdown = """ 
-    The first step in the classification is extracting the pixel values of the imagery data for each class ROI. Prior to extracting the pixel, you must specified if you are going to split the ROI into training and testing data.
-    If you decide to split the data, you will be able to evaluate the model of the classification, prior to generating the land cover classification.
-    If you decide not to split the data, you cannot evaluate the model quality, and thus only able to compute thematic accuracy in module 7. 
+    Langkah pertama dalam klasifikasi adalah mengekstrak nilai piksel dari data citra untuk setiap kelas ROI. Sebelum mengekstrak piksel, Anda harus menentukan apakah akan membagi ROI menjadi data pelatihan dan pengujian.
+    Jika Anda memutuskan untuk membagi data, Anda akan dapat mengevaluasi model klasifikasi sebelum menghasilkan klasifikasi tutupan lahan.
+    Jika Anda memutuskan untuk tidak membagi data, Anda tidak dapat mengevaluasi kualitas model, dan hanya dapat menghitung akurasi tematik di modul 7.
     """
     st.markdown(markdown)
     
     col1, col2 = st.columns([1, 1])
     #first column, provide option to split or not split
     with col1:
-        st.subheader("Data Split Options")
+        st.subheader("Opsi Pembagian Data")
         # Option to split data
         split_data = st.checkbox(
-            "Split data into training and testing subsets",
+            "Bagi data menjadi subset pelatihan dan pengujian",
             value=True,
-            help="If unchecked, all ROI data will be used for training the classifier"
+            help="Jika tidak dicentang, seluruh data referensi akan digunakan untuk melatih model klasifikasi"
         )
         #What happened if the user choose to split the data
         if split_data:
-            st.info("The ROI is split into training and testing data using stratified random split approach")
+            st.info("ROI dibagi menjadi data pelatihan dan pengujian menggunakan pendekatan pembagian acak berstrata")
             
             #Split ratio
             split_ratio = st.slider(
@@ -215,24 +215,24 @@ with tab1:
                 max_value=0.9,
                 value=0.7,
                 step=0.05,
-                help="Proportion of data to use for training"
+                help="Proporsi data yang digunakan untuk pelatihan"
             )
             #information about the proportion
             st.metric("Training", f"{split_ratio*100:.0f}%", delta=None)
             st.metric("Testing", f"{(1-split_ratio)*100:.0f}%", delta=None)
         #What happened if the user choose not to split the data    
         else:
-            st.warning("All ROI data will be used for training. Please prepared an independent testing dataset.")
+            st.warning("Seluruh data ROI akan digunakan untuk pelatihan. Siapkan dataset pengujian independen.")
     #Second column, prepared the extraction parameters 
     with col2:
-        st.subheader("Extraction Parameters")
+        st.subheader("Parameter ekstrasi data")
         #Get class property from previous module if available. What the user choose for separability analysis, will be used here
         default_class_prop = st.session_state.get('selected_class_property', 'class')
         #Class property name
         class_property = st.text_input(
             "Class ID",
             value=default_class_prop,
-            help="Column name in your ROI containing the class ID"
+            help="Nama kolom tabel atribut yang berisi ID kelas numerik"
         )
         # Pixel size
         pixel_size = st.number_input(
@@ -240,14 +240,14 @@ with tab1:
             min_value=1,
             max_value=1000,
             value=30,
-            help="Spatial resolution for sampling"
+            help="Resolusi spasial untuk pengambilan sampel"
         )
     st.markdown("---")
     
     #Extract Features button
-    if st.button("Extract Features", type="primary", use_container_width=True):
+    if st.button("Ekstrak Fitur", type="primary", use_container_width=True):
         #Spinner to show progress
-        with st.spinner("Extracting features from imagery..."):
+        with st.spinner("Mengekstrak fitur dari citra..."):
             try:
                 #Use module 6 feature extraction class 
                 fe = FeatureExtraction()
@@ -271,7 +271,7 @@ with tab1:
                         st.metric("Training Samples", training_data.size().getInfo())
                     with col2:
                         st.metric("Testing Samples", testing_data.size().getInfo())
-                    st.success("✅ Feature extraction complete!")
+                    st.success("✅ Ekstraksi fitur selesai!")
                 else:
                     #Extract all features without splitting
                     training_data = image.sampleRegions(
@@ -283,16 +283,16 @@ with tab1:
                     st.session_state.extracted_training_data = training_data
                     st.session_state.extracted_testing_data = None
                     st.session_state.class_property = class_property
-                    st.info("ℹ️ All ROI data has been used for training. No test set created.")
+                    st.info("ℹ️ Semua data ROI telah digunakan untuk pelatihan. Tidak ada set pengujian yang dibuat.")
             #error log if something fail    
             except Exception as e:
-                st.error(f"Error during feature extraction: {e}")
+                st.error(f"Kesalahan saat ekstraksi fitur: {e}")
                 import traceback
                 st.code(traceback.format_exc())
 
 # ==================== Tab 2: Model Learning ====================
 with tab2:
-    st.header("Membuat Model Klasifikasi")
+    st.header("Membuat model klasifikasi")
     
     #introduction
     st.markdown("""
@@ -320,7 +320,7 @@ with tab2:
     
     #Check if training data is available
     if st.session_state.extracted_training_data is None:
-        st.warning("⚠️ Lakukan ekstraksi nilai piksel melalui 'feature extraction'")
+        st.warning("⚠️ Lakukan ekstraksi nilai piksel melalui 'ekstraksi fitur'")
     else:
         st.success("✅ Proses ekstraksi nilai piksel tersedia. Proses klasifikasi dapat dilakukan")
         
@@ -336,18 +336,18 @@ with tab2:
             st.markdown("Algoritma Random Forest memiliki beberapa parameter utama yang mempengaruhi kemampuannya untuk mempelajari pola")
             st.markdown("1. Jumlah Pohon Keputusan (number of trees)")
             st.markdown("2. Jumlah variabel yang dipertimbangkan saat pengambilan keputusan (variable_per_split)")
-            st.markdown("3. Jumlah sampel yang dipertmbangkan untuk memecah sebuah daun dalam pohon keputusan (min leaf population)")
-        st.markdown("Anda dapat memilih opsi untuk menggunakan pengaturan model yang telah disediakan atau mengatur dengan sendiri")
+            st.markdown("3. Jumlah sampel yang dipertimbangkan untuk memecah sebuah daun dalam pohon keputusan (min leaf population)")
+        st.markdown("0")
         
         #Create tabs for preset value, or manuall setting
         config_tab1, config_tab2 = st.tabs(["Pengaturan Umum", "⚙️ Pengaturan Lebih Lanjut"])
         #Preset parameter value
         with config_tab1:
-            st.markdown("Pengaturan Umum yang diterapkan untuk kajian penginderaan jauh")
+            st.markdown("0")
             col1, col2 = st.columns(2)
             
             with col1:
-                st.markdown("### Jumlah Pohon Keputusan")
+                st.markdown("Jumlah pohon keputusan")
                 st.markdown("*Berapa banyak 'pendapat ahli' diperlukan?*")
                 
                 #Predefined preset (?)
@@ -357,7 +357,7 @@ with tab2:
                      "Balanced: 150 trees (Ideal untuk klasifikasi penutup lahan dengan kompleksitas menengah)", 
                      "Complex: 300 trees (Ideal untuk klasifikasi penutup lahan dengan kompleksitas tinggi) "],
                     index=1,
-                    help="Semakin banyak jumlah pohon, akurasi dapat meningkat, namun beban komputasi yang semakin tinggi"
+                    help="0"
                 )
                 #translate the preset to the machine requirement
                 if "Stable" in tree_preset:
@@ -368,8 +368,8 @@ with tab2:
                     ntrees = 300
             
             with col2:
-                st.markdown("### Pengaturan lainnya")
-                st.markdown("*Parameter lainnya menggunakan nilai bawaan (default*")
+                st.markdown("Pengaruran lainnya")
+                st.markdown("Parameter lainnya menggunakan nilai bawaan")
                 
                 use_auto_vsplit = True
                 v_split = None
@@ -380,7 +380,7 @@ with tab2:
                 st.info("💡 Nilai ini umumnya dapat menghasilkan model yang bagus")
         
         with config_tab2:
-            st.markdown("**Jika ingin menyesuaikan parameter secara bebas**")
+            st.markdown("0")
             
             col1, col2, col3 = st.columns(3)
             
@@ -392,11 +392,11 @@ with tab2:
                     max_value=900,
                     value=100,
                     step=10,
-                    help="Semakin banyak jumlah pohon, akurasi dapat meningkat, namun beban komputasi yang semakin tinggi"
+                    help="0"
                 )
                 
             with col2:
-                st.markdown("###  Variables per Split")
+                st.markdown("Jumlah variable per split")
                 use_auto_vsplit = st.checkbox(
                     "Menggunakan nilai bawaan",
                     value=True,
@@ -416,14 +416,14 @@ with tab2:
                     st.success("✅ Menggunakna √(dari jumlah variabel/prediktor)")
             
             with col3:
-                st.markdown("### Minimum Leaf Size")
+                st.markdown("Jumlah minimum sampel daun?")
                 min_leaf = st.number_input(
                     "Minimum Samples per Leaf",
                     min_value=1,
                     max_value=100,
                     value=1,
 
-                    help= "Jumlah minimal sampel yang dibutuhkan untuk leaf node"
+                    help= "Jumlah minimal sampel yang dibutuhkan untuk tiap leaf node"
                 )
                 
         # Ready to train section
@@ -490,15 +490,15 @@ with tab2:
                 
                 # Success message with next steps
                 st.success("🎉 **Selamat!** Model klasifikasi telah berhasil dilatih!")
-                st.info("👉 **Apa selanjutnya?** pergi ke sub-bagian  'Evaluasi Model' untuk melihat performa model klasifikasi!")
+                st.info("👉 **Apa selanjutnya?** Pergi ke sub-bagian 'Ringkasan Hasil Latih dan Evaluasi Model Klasifikasi' untuk melihat performa model klasifikasi!")
                 
             except Exception as e:
                 progress_bar.progress(0)
                 status_text.text("")
-                st.error("❌ **Oops! Something went wrong during training.**")
-                st.error("**Error details:** " + str(e))
+                st.error("❌ **Ups! Terjadi kesalahan saat pelatihan.**")
+                st.error("**Detail kesalahan:** " + str(e))
                 
-                with st.expander("🔧 Technical Details (for troubleshooting)"):
+                with st.expander("🔧 Detail Teknis (untuk pemecahan masalah)"):
                     import traceback
                     st.code(traceback.format_exc())
 # ==================== TAB 3 Summary Result ====================
@@ -508,7 +508,7 @@ with tab3:
     st.markdown("""
     Melalui bagian ini, anda dapat mengulas proses latih model klasifikasi yang telah dilakukan
     Platform EPISTEM mendukung dua pendekatan untuk mengulas kemampuan pembelajaran mesin:""")
-    st.markdown("1. Feature Importance: Kanal mana yang paling penting untuk pembelajaran model?")
+    st.markdown("1. Feature Importance: Kanal citra mana yang mengandung informasi terpenting untuk pembelajaran model?")
     st.markdown("2. Akurasi Model: Bagaimana model klasifikasi menghadapi data yang baru?")
     
     #Column for feature importance and Model accuracy explanation
@@ -544,7 +544,7 @@ with tab3:
     
     # Check if trained model exists
     if 'trained_model' not in st.session_state:
-        st.error("Trained model not found. Please re-run classification.")
+        st.error("Model terlatih tidak ditemukan. Silakan jalankan ulang klasifikasi.")
         st.stop()
     
     st.divider()
@@ -597,7 +597,7 @@ with tab3:
             st.plotly_chart(fig, use_container_width=True)
         
         with col2:
-            st.markdown("**Kanal yang paling penting:**")
+            st.markdown("0")
             for i, row in importance_df.head(5).iterrows():
                 st.write(f"{i+1}. {row['Band']}")
             
@@ -635,13 +635,13 @@ with tab3:
     #if its not there
     #user still able to visualize the map
     if not have_test_data:
-        st.info("💡 No test data available for accuracy assessment")
+        st.info("💡 Tidak ada data pengujian untuk penilaian akurasi")
         st.markdown("""
-        **To evaluate model accuracy:**
-        1. Go back to 'Feature Extraction' tab
-        2. Check 'Split data into training and testing subsets'
-        3. Re-run feature extraction and model training
-        4. Return here to see accuracy results
+        **Untuk mengevaluasi akurasi model:**
+        1. Kembali ke tab 'Ekstraksi Fitur/Nilai Piksel'
+        2. Centang 'Bagi data menjadi subset pelatihan dan pengujian'
+        3. Jalankan ulang ekstraksi fitur dan pelatihan model
+        4. Kembali ke sini untuk melihat hasil akurasi
         """)
     #If there's data, capability to calculate model accuracy
     else:
@@ -658,7 +658,7 @@ with tab3:
                     )
                     #stored the model for model accuracy assessment
                     st.session_state.model_quality = model_quality
-                    st.success("✅ Accuracy assessment complete!")
+                    st.success("✅ Penilaian akurasi selesai!")
                     
                 except Exception as e:
                     st.error(f"Error during evaluation: {e}")
@@ -757,7 +757,7 @@ with tab3:
             
             # Confusion Matrix
             st.subheader("🔍 Confusion Matrix")
-            st.markdown("Shows how often each class was correctly identified vs confused with other classes")
+            st.markdown("Menunjukkan seberapa sering setiap kelas berhasil diidentifikasi dengan benar dibandingkan dengan yang keliru diklasifikasikan sebagai kelas lain.")
             
             # Get class names from Module 2 if available
             class_labels = []
@@ -888,7 +888,7 @@ with tab3:
 # ==================== TAB 4 Visualization ====================
 #USE MODULE 2 CLASSIFICATION SCHEME 
 with tab4:
-    st.header("Visualization")
+    st.header("Visualisasi")
     st.markdown("""
     Pada bagian ini anda dapat melihat hasil klasifikasi yang telah dilakukan oleh model yang telah dilatih.
     Sistem akan menggunakan warna yang telah ditentukan di modul 2 untuk visualisasi hasil klasifikasi,
@@ -1106,7 +1106,7 @@ with tab5:
             export_name = st.text_input(
                 "Export Filename:",
                 value=default_name,
-                help="The output will be saved as GeoTIFF (.tif)"
+                help="Hasil akan disimpan dalam format GeoTIFF (.tif)"
             )
             
             #Hardcoded folder location for classification exports
@@ -1228,7 +1228,7 @@ with tab5:
                         
                 except Exception as e:
                     st.error(f"Export failed: {str(e)}")
-                    st.info("Debugging info:")
+                    st.info("Informasi Pemecahan Masalah:")
                     st.write(f"AOI type: {type(st.session_state.get('AOI', st.session_state.get('aoi')))}")
                     st.write(f"Classification result exists: {st.session_state.classification_result is not None}")
         
@@ -1359,7 +1359,7 @@ with tab5:
 
 # Footer with navigation
 st.divider()
-st.subheader("Module Navigation")
+st.subheader("Navigasi modul")
 
 col1, col2 = st.columns(2)
 
@@ -1371,7 +1371,7 @@ with col2:
     if st.session_state.classification_result is not None:
         if st.button("➡️ Go to Module 7: Thematic Accuracy Assessment", use_container_width=True):
             st.switch_page("pages/6_Module_7_Thematic_Accuracy.py")
-            st.info("Accuracy assessment module coming soon!")
+            st.info("Modul uji akurasi akan segera tersedia!")
     else:
         st.button("🔒 Complete Classification First", disabled=True, use_container_width=True)
 
