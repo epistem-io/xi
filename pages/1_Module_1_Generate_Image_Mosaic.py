@@ -456,7 +456,15 @@ else:
 #=========5. Exporting the image collection===========
 #check if the session state is not empty
 if st.session_state.composite is not None and st.session_state.aoi is not None:
-    st.subheader("Simpan Gabungan Citra ke Google Drive")
+    st.subheader("Simpan Gabungan Citra")
+    
+    # Export destination selection
+    export_destination = st.radio(
+        "Pilih tujuan ekspor:",
+        ["Google Drive", "Google Cloud Storage"],
+        index=0,
+        help="Pilih lokasi untuk menyimpan hasil gabungan citra"
+    )
     #Create an export setting for the user to filled
     with st.expander("Export Settings", expanded=True):
         col1 = st.columns(1)
@@ -467,12 +475,45 @@ if st.session_state.composite is not None and st.session_state.aoi is not None:
                 value=default_name,
                 help="Hasil akan disimpan dalam format GeoTIFF (.tif)"
             )
-        #Hardcoded folder location so that the export is in one location
-        #Located in My Drive/EPISTEM/EPISTEMX_Landsat_Export folder structure
-        drive_folder = "EPISTEM/EPISTEMX_Landsat_Export"  
-        drive_url = "https://drive.google.com/drive/folders/1JKwqv3q3JyQnkIEuIqTQ2hlwPmM-FQaF?usp=sharing"
-       
-        st.info(f"Files will be exported to [EPISTEM/EPISTEMX_Landsat_Export folder]({drive_url})")
+        # Export destination specific settings
+        if export_destination == "Google Drive":
+            #Hardcoded folder location so that the export is in one location
+            #Located in My Drive/EPISTEM/EPISTEMX_Landsat_Export folder structure
+            drive_folder = "EPISTEM/EPISTEMX_Landsat_Export"  
+            drive_url = "https://drive.google.com/drive/folders/1JKwqv3q3JyQnkIEuIqTQ2hlwPmM-FQaF?usp=sharing"
+           
+            st.info(f"Files will be exported to [EPISTEM/EPISTEMX_Landsat_Export folder]({drive_url})")
+        
+        else:  # Google Cloud Storage
+            st.subheader("Google Cloud Storage Settings")
+            
+            # GCS Bucket name
+            gcs_bucket = st.text_input(
+                "GCS Bucket Name:",
+                value="epistemx",
+                placeholder="epistemx",
+                help="Enter your Google Cloud Storage bucket name"
+            )
+            
+            # GCS file path prefix
+            gcs_path_prefix = st.text_input(
+                "File Path Prefix (optional):",
+                value="landsat_exports/",
+                help="Optional path prefix inside the bucket (e.g., 'landsat_exports/' or 'data/imagery/')"
+            )
+            
+            # Service Account Email (optional - for display purposes, partially hidden)
+            service_account_email = st.text_input(
+                "Service Account Email:",
+                value="epistemx@ee-xxx.iam.gserviceaccount.com",
+                placeholder="epistemx@ee-xxx.iam.gserviceaccount.com",
+                help="Service account email for authentication (configured separately)"
+            )
+            
+            if not gcs_bucket:
+                st.warning("⚠️ GCS Bucket name is required for Cloud Storage export")
+            else:
+                st.info(f"Files will be exported to: gs://{gcs_bucket}/{gcs_path_prefix}{export_name}.tif")
         #Coordinate Reference System (CRS)
         #User can define their own CRS using EPSG code, if not, used WGS 1984 as default option    
         crs_options = {
@@ -504,7 +545,14 @@ if st.session_state.composite is not None and st.session_state.aoi is not None:
             )
         #Button to start export the composite
         #System Response 1.3: Imagery Download
-        if st.button("Start Export to Google Drive", type="primary"):
+        export_button_text = f"Start Export to {export_destination}"
+        export_disabled = False
+        
+        # Disable button if GCS is selected but bucket name is missing
+        if export_destination == "Google Cloud Storage" and not gcs_bucket:
+            export_disabled = True
+            
+        if st.button(export_button_text, type="primary", disabled=export_disabled):
             try:
                 with st.spinner("Preparing export task..."):
                     #Use the composite from session state
@@ -530,29 +578,51 @@ if st.session_state.composite is not None and st.session_state.aoi is not None:
                         except:
                             raise ValueError(f"Cannot extract geometry from AOI object of type: {type(aoi_obj)}")
                     
-                    #Summarize the export parameter from user input
-                    export_params = {
-                        "image": export_image,
-                        "description": export_name.replace(" ", "_"),  #Remove spaces from description
-                        "folder": drive_folder,
-                        "fileNamePrefix": export_name,
-                        "scale": scale,
-                        "crs": export_crs,
-                        "maxPixels": 1e13,
-                        "fileFormat": "GeoTIFF",
-                        "formatOptions": {"cloudOptimized": True},
-                        "region": export_region
-                    }
+                    # Configure export parameters based on destination
+                    if export_destination == "Google Drive":
+                        #Summarize the export parameter from user input for Google Drive
+                        export_params = {
+                            "image": export_image,
+                            "description": export_name.replace(" ", "_"),  #Remove spaces from description
+                            "folder": drive_folder,
+                            "fileNamePrefix": export_name,
+                            "scale": scale,
+                            "crs": export_crs,
+                            "maxPixels": 1e13,
+                            "fileFormat": "GeoTIFF",
+                            "formatOptions": {"cloudOptimized": True},
+                            "region": export_region
+                        }
+                        
+                        #Pass the parameters to earth engine export
+                        task = ee.batch.Export.image.toDrive(**export_params)
+                        
+                    else:  # Google Cloud Storage
+                        #Summarize the export parameter from user input for GCS
+                        export_params = {
+                            "image": export_image,
+                            "description": export_name.replace(" ", "_"),  #Remove spaces from description
+                            "bucket": gcs_bucket,
+                            "fileNamePrefix": f"{gcs_path_prefix}{export_name}",
+                            "scale": scale,
+                            "crs": export_crs,
+                            "maxPixels": 1e13,
+                            "fileFormat": "GeoTIFF",
+                            "formatOptions": {"cloudOptimized": True},
+                            "region": export_region
+                        }
+                        
+                        #Pass the parameters to earth engine export for Cloud Storage
+                        task = ee.batch.Export.image.toCloudStorage(**export_params)
                     
-                    #Pass the parameters to earth engine export
-                    task = ee.batch.Export.image.toDrive(**export_params)
                     task.start()
                     
                     #Store task info in session state for monitoring
                     task_info = {
                         'id': task.id,
                         'name': export_name,
-                        'folder': drive_folder,
+                        'destination': export_destination,
+                        'folder': drive_folder if export_destination == "Google Drive" else gcs_bucket,
                         'crs': export_crs,
                         'scale': scale,
                         'start_time': datetime.datetime.now(),
@@ -564,14 +634,28 @@ if st.session_state.composite is not None and st.session_state.aoi is not None:
                     #note, here the task is submitted, but not yet done
                     st.success(f"✅ Export task '{export_name}' submitted successfully!")
                     st.info(f"Task ID: {task.id}")
-                    st.markdown(f"""
-                    **Export Details:**
-                    - File location: My Drive/{drive_folder}/{export_name}.tif
-                    - CRS: {export_crs}
-                    - Resolution: {scale}m
                     
-                    Check progress in the [Earth Engine Task Manager](https://code.earthengine.google.com/tasks) or use the task monitor below.
-                    """)
+                    # Display export details based on destination
+                    if export_destination == "Google Drive":
+                        st.markdown(f"""
+                        **Export Details:**
+                        - Destination: Google Drive
+                        - File location: My Drive/{drive_folder}/{export_name}.tif
+                        - CRS: {export_crs}
+                        - Resolution: {scale}m
+                        
+                        Check progress in the [Earth Engine Task Manager](https://code.earthengine.google.com/tasks) or use the task monitor below.
+                        """)
+                    else:  # Google Cloud Storage
+                        st.markdown(f"""
+                        **Export Details:**
+                        - Destination: Google Cloud Storage
+                        - File location: gs://{gcs_bucket}/{gcs_path_prefix}{export_name}.tif
+                        - CRS: {export_crs}
+                        - Resolution: {scale}m
+                        
+                        Check progress in the [Earth Engine Task Manager](https://code.earthengine.google.com/tasks) or use the task monitor below.
+                        """)
                     
             except Exception as e:
                 st.error(f"Export failed: {str(e)}")
