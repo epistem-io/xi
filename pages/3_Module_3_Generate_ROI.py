@@ -335,7 +335,7 @@ if reference_data_source:
             st.markdown("**Preview data pelatihan (tabel):**")
             # Show first 10 rows of the training data
             preview_df = train_data_ref.head(10)
-            st.dataframe(preview_df, width="stretch")
+            st.dataframe(preview_df, use_container_width=True)
             
             st.markdown("**Preview data pelatihan (peta):**")
             import folium
@@ -500,7 +500,7 @@ if reference_data_source:
                         lambda x: f"{x:.2f}%" if isinstance(x, (int, float)) else x
                     )
                 
-                st.dataframe(display_df, width="stretch")
+                st.dataframe(display_df, use_container_width=True)
                 
                 if 'insufficient_df_ref' in st.session_state and st.session_state['insufficient_df_ref'] is not None:
                     if len(st.session_state['insufficient_df_ref']) > 0:
