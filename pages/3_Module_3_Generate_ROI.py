@@ -21,6 +21,7 @@ initialize_earth_engine(service_account_file=service_account_path)
 # Initialize session state variables
 session_defaults = {
     'sampling_data': {'type': 'FeatureCollection', 'features': []},
+    'pending_features': [],  # For batch feature input
     'feature_count': 0,
     'last_recorded_feature': None,
     'center_lat': 0,
@@ -951,9 +952,9 @@ else:
 
         map_center = [st.session_state.center_lat, st.session_state.center_lon]
         basemap_configs = {
+            "OpenStreetMap": {"tiles": "OpenStreetMap"},
             "Satellite (ESRI)": {"tiles": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", "attr": "ESRI"},
             "Satellite (Google)": {"tiles": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", "attr": "Google"},
-            "OpenStreetMap": {"tiles": "OpenStreetMap"},
             "CartoDB Dark": {"tiles": "CartoDB dark_matter"},
             "CartoDB Positron": {"tiles": "CartoDB positron"}
         }
@@ -983,6 +984,7 @@ else:
             except Exception as e:
                 st.error(f"Error displaying AOI: {e}")
 
+        # Add confirmed features to map (only saved features, not drawn ones)
         feature_group = folium.FeatureGroup(name="LULC Features")
         for feature in st.session_state.sampling_data['features']:
             geom_type, color = feature['geometry']['type'], feature['properties'].get('Class_Color', '#808080')
@@ -994,6 +996,7 @@ else:
             elif geom_type == 'Polygon':
                 latlngs = [[coord[1], coord[0]] for coord in feature['geometry']['coordinates'][0]]
                 folium.Polygon(locations=latlngs, color=color, fill_color=color, fill_opacity=0.4, weight=3, popup=popup_text).add_to(feature_group)
+        
         feature_group.add_to(m)
 
         draw_options = {'polyline': False, 'rectangle': False, 'circle': False, 'circlemarker': False, 'marker': True,
@@ -1003,14 +1006,76 @@ else:
 
         col_map, col_colors = st.columns([3, 1])
         with col_map:
-            map_output = st_folium(m, width=None, height=600, key="folium_map", returned_objects=["last_active_drawing"])
+            # Dynamic map key for clearing drawings
+            map_key = f"folium_map_{st.session_state.get('folium_map_counter', 0)}"
+            # Keep drawing functionality but minimize reloads
+            map_output = st_folium(m, width=None, height=600, key=map_key, returned_objects=["all_drawings"])
+            
+
         
         with col_colors:
+            # Batch feature capture button
+            if st.button("✅ Tambahkan Fitur", type="primary", width="stretch"):
+                # Get all drawn features from the map
+                if map_output and 'all_drawings' in map_output and map_output['all_drawings']:
+                    drawn_features = map_output['all_drawings']
+                    added_count = 0
+                    
+                    for feature in drawn_features:
+                        # Skip if this feature is already in our saved features
+                        feature_geom = json.dumps(feature['geometry'], sort_keys=True)
+                        already_exists = any(
+                            json.dumps(saved_feature['geometry'], sort_keys=True) == feature_geom 
+                            for saved_feature in st.session_state.sampling_data['features']
+                        )
+                        
+                        if not already_exists:
+                            if 'properties' not in feature:
+                                feature['properties'] = {}
+                            
+                            # Add properties with current selected class
+                            st.session_state.feature_count += 1
+                            feature['properties'].update({
+                                'feature_id': st.session_state.feature_count,
+                                'LULC_Class': selected_class,
+                                'Class_Color': classes_df[selected_class],
+                                'source': 'digitized'
+                            })
+                            
+                            if st.session_state['LULCTable'] is not None:
+                                try:
+                                    lulc_id = st.session_state['LULCTable'][st.session_state['LULCTable']['LULC_Type'] == selected_class]['ID'].iloc[0]
+                                    feature['properties']['LULC_ID'] = int(lulc_id)
+                                except (IndexError, KeyError):
+                                    feature['properties']['LULC_ID'] = 0
+                            else:
+                                feature['properties']['LULC_ID'] = 0
+                            
+                            # Add to main features list
+                            st.session_state.sampling_data['features'].append(feature)
+                            added_count += 1
+                    
+                    if added_count > 0:
+                        st.success(f"✅ {added_count} fitur berhasil ditambahkan dengan kelas {selected_class}!")
+                    else:
+                        st.info("Tidak ada fitur baru untuk ditambahkan")
+                else:
+                    st.warning("Tidak ada fitur yang digambar di peta")
+            
+            if st.button("🗑️ Bersihkan Peta", width="stretch"):
+                # Clear the drawing layer by resetting the map key
+                if 'folium_map_counter' not in st.session_state:
+                    st.session_state.folium_map_counter = 0
+                st.session_state.folium_map_counter += 1
+                st.info("Peta akan dibersihkan pada reload berikutnya")
+            
+            st.divider()
             st.markdown("**Visibilitas Layer:**")
             st.session_state.show_aoi_layer = st.checkbox("Tampilkan Layer AOI", value=st.session_state.show_aoi_layer, disabled=AOI_GDF is None)
             st.session_state.show_geotiff_layer = st.checkbox("Tampilkan Peta Dasar Kustom", value=st.session_state.show_geotiff_layer, disabled=st.session_state.geotiff_overlay is None)
             
             st.markdown("**Warna Kelas:**")
+            # Show only confirmed features
             if st.session_state.sampling_data['features']:
                 try:
                     gdf_colors = gpd.GeoDataFrame.from_features(st.session_state.sampling_data['features'])
@@ -1026,55 +1091,8 @@ else:
 
 
 
-        # Show success message for last added feature
-        if 'last_added_feature' in st.session_state:
-            last_feature = st.session_state['last_added_feature']
-            st.success(f"✓ Feature #{last_feature['id']} added: **{last_feature['class']}** ({last_feature['type']})")
-            # Clear the message after showing it
-            del st.session_state['last_added_feature']
-
-        # Handle new feature drawing
-        if map_output and map_output.get("last_active_drawing"):
-            new_feature = map_output["last_active_drawing"]
-            
-            # Create a unique identifier for this geometry to prevent duplicates
-            geom_str = json.dumps(new_feature['geometry'], sort_keys=True)
-            
-            # Check if this is truly a new feature
-            if geom_str != st.session_state.get('last_recorded_feature'):
-                st.session_state.feature_count += 1
-                if 'properties' not in new_feature:
-                    new_feature['properties'] = {}
-                
-                new_feature['properties'].update({
-                    'feature_id': st.session_state.feature_count,
-                    'LULC_Class': selected_class,
-                    'Class_Color': classes_df[selected_class],
-                    'source': 'digitized'
-                })
-                
-                if st.session_state['LULCTable'] is not None:
-                    try:
-                        lulc_id = st.session_state['LULCTable'][st.session_state['LULCTable']['LULC_Type'] == selected_class]['ID'].iloc[0]
-                        new_feature['properties']['LULC_ID'] = int(lulc_id)
-                    except (IndexError, KeyError):
-                        new_feature['properties']['LULC_ID'] = 0
-                else:
-                    new_feature['properties']['LULC_ID'] = 0
-                
-                # Add to features list
-                st.session_state.sampling_data['features'].append(new_feature)
-                st.session_state.last_recorded_feature = geom_str
-                
-                # Store success message
-                st.session_state['last_added_feature'] = {
-                    'id': st.session_state.feature_count,
-                    'class': selected_class,
-                    'type': new_feature['geometry']['type']
-                }
-                
-                # Force immediate rerun to show the new feature
-                st.rerun()
+        # Simple drawing workflow
+        st.info("💡 Gambar titik/poligon di peta, lalu klik 'Tambahkan Fitur' untuk menyimpan")
 
         st.subheader("Fitur LULC yang Terekam")
         if st.session_state.sampling_data['features']:
@@ -1118,11 +1136,64 @@ else:
                 with col_right:
                     st.markdown("**Hapus Fitur**")
                     feature_ids = gdf_display['Feature ID'].tolist()
-                    selected_feature_id = st.selectbox("Pilih Feature ID:", feature_ids, label_visibility="collapsed")
+                    
+                    # Text input for flexible feature ID selection
+                    delete_input = st.text_input(
+                        "Feature ID(s):", 
+                        placeholder="e.g. 2-5 atau 2,8,10",
+                        help="Masukkan ID fitur yang ingin dihapus. Format: '2-5' untuk range atau '2,8,10' untuk multiple selection",
+                        label_visibility="collapsed"
+                    )
+                    
                     if st.button("🗑️ Hapus", use_container_width=True, type="secondary"):
-                        st.session_state.sampling_data['features'] = [f for f in st.session_state.sampling_data['features'] 
-                                                                     if f['properties'].get('feature_id', f['properties'].get('id')) != selected_feature_id]
-                        st.success(f"Feature ID #{selected_feature_id} telah dihapus")
+                        if delete_input.strip():
+                            try:
+                                # Parse the input to get list of feature IDs to delete
+                                ids_to_delete = []
+                                
+                                # Split by comma for multiple selections
+                                parts = [part.strip() for part in delete_input.split(',')]
+                                
+                                for part in parts:
+                                    if '-' in part and len(part.split('-')) == 2:
+                                        # Range format (e.g., "2-5")
+                                        start, end = part.split('-')
+                                        start_id = int(start.strip())
+                                        end_id = int(end.strip())
+                                        if start_id <= end_id:
+                                            ids_to_delete.extend(range(start_id, end_id + 1))
+                                        else:
+                                            st.error(f"Range tidak valid: {part}. Start harus <= end.")
+                                            continue
+                                    else:
+                                        # Single ID
+                                        ids_to_delete.append(int(part))
+                                
+                                # Remove duplicates and filter valid IDs
+                                ids_to_delete = list(set(ids_to_delete))
+                                valid_ids = [id for id in ids_to_delete if id in feature_ids]
+                                invalid_ids = [id for id in ids_to_delete if id not in feature_ids]
+                                
+                                if valid_ids:
+                                    # Remove features with matching IDs
+                                    st.session_state.sampling_data['features'] = [
+                                        f for f in st.session_state.sampling_data['features'] 
+                                        if f['properties'].get('feature_id', f['properties'].get('id')) not in valid_ids
+                                    ]
+                                    st.success(f"Berhasil menghapus {len(valid_ids)} fitur: {valid_ids}")
+                                    # Trigger rerun to update the table immediately
+                                    st.rerun()
+                                    
+                                if invalid_ids:
+                                    st.warning(f"ID tidak ditemukan: {invalid_ids}")
+                                    
+                            except ValueError as e:
+                                st.error(f"Format input tidak valid. Gunakan angka saja. Error: {str(e)}")
+                            except Exception as e:
+                                st.error(f"Error menghapus fitur: {str(e)}")
+                        else:
+                            st.warning("Masukkan ID fitur yang ingin dihapus")
+                    
                     st.metric("Total Fitur", len(gdf_display))
 
                 col2, col3, col4, col5, col6 = st.columns(5)
