@@ -1,1602 +1,485 @@
+"""
+Module 3 Backend - Simplified Legacy Support
+
+This module provides backward compatibility with existing Module 3 functionality.
+Contains essential legacy classes and imports for direct function calls.
+"""
+
+import streamlit as st
 import pandas as pd
 import geopandas as gpd
-from shapely.geometry import Point, shape, Polygon, MultiPolygon
+import numpy as np
 import ee
-from datetime import datetime
-import os
-import folium
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from IPython.display import display
-from shapely.geometry import mapping
-import random
-import geemap
-import time
-import json
-from typing import Any, Dict, List, Optional
-from shapely.geometry import Point
-import ipywidgets as widgets
-from ipywidgets import Button, Output, VBox, HBox, Dropdown, Label, HTML
-from ipyleaflet import Map, Marker, basemaps, LayersControl, GeoJSON, DivIcon
+from typing import Dict, List, Optional, Tuple, Any, Union
+import warnings
+import logging
+from shapely.geometry import shape
 
-# --- System response 3.1 ---
-class InputCheck:
-    """
-    System respons 3.1: Prequisite check
-    """
+# Configure logging
+logger = logging.getLogger(__name__)
 
-    def ValidateVariable(*variable_names):
-        """
-        Validate that all specified variable names exist in the namespace.
+# Import existing functionality for direct use
+from .data_integration import (
+    detect_insufficient_samples, 
+    combine_training_sources,
+    standardize_training_data
+)
+from .final_dataset_preparation import (
+    prepare_final_training_dataset,
+    create_sample_distribution_table,
+    validate_dataset_consistency,
+    generate_dataset_statistics
+)
+from .enhanced_data_splitting import (
+    split_combined_training_data,
+    create_legacy_compatible_split,
+    analyze_split_quality
+)
+from .backward_compatibility import (
+    ensure_module3_backward_compatibility,
+    cleanup_temporary_session_state
+)
+
+# Legacy imports for backward compatibility
+try:
+    # Try to import existing legacy classes if available
+    import ee
+    
+    class InputCheck:
+        """Legacy input checking functionality."""
         
-        Args:
-            *variable_names: Variable names as strings
+        @staticmethod
+        def check_prerequisites():
+            """Check if all prerequisites are met."""
+            aoi_available = 'AOI' in st.session_state and 'gdf' in st.session_state
+            classification_available = (
+                ('classification_df' in st.session_state and not st.session_state['classification_df'].empty) or
+                ('lulc_classes_final' in st.session_state and len(st.session_state['lulc_classes_final']) > 0) or
+                ('classes' in st.session_state and len(st.session_state['classes']) > 0)
+            )
+            composite_available = 'composite' in st.session_state
+            
+            return aoi_available and classification_available and composite_available
+    
+    class SyncTrainData:
+        """Legacy training data synchronization functionality."""
         
-        Usage:
-            validate_variables('LULCTable', 'ClippedImage', 'AOI')
-        """
-        print("=== Validating Required Variables ===")
-        
-        missing_variables = []
-        
-        for var_name in variable_names:
+        @staticmethod
+        def LoadTrainData(landcover_df, aoi_geometry, training_shp_path=None, training_ee_path=None):
+            """Load training data from EE asset or shapefile."""
             try:
-                var_value = eval(var_name)
-                print(f"{var_name}: EXISTS (type: {type(var_value)})")
-            except NameError:
-                print(f"{var_name}: NOT DEFINED")
-                missing_variables.append(var_name)
-            except Exception as e:
-                print(f"{var_name}: ERROR - {e}")
-                missing_variables.append(var_name)
-        
-        if missing_variables:
-            error_msg = f"ERROR: Missing required variables: {', '.join(missing_variables)}. Execution stopped."
-            print("\n" + "!" * 60)
-            print(error_msg)
-            print("!" * 60)
-            raise NameError(error_msg)
-        else:
-            print("\nAll required variables are present. Continuing execution...")
-            return True
+                if training_ee_path:
+                    logger.info(f"Loading training data from EE asset: {training_ee_path}")
+                    
+                    # Test Earth Engine authentication and asset access
+                    try:
+                        # Load from Earth Engine asset
+                        training_fc = ee.FeatureCollection(training_ee_path)
+                        
+                        # Get initial count
+                        initial_count = training_fc.size().getInfo()
+                        logger.info(f"Initial feature count: {initial_count}")
+                        
+                        if initial_count == 0:
+                            raise Exception(f"Earth Engine asset '{training_ee_path}' contains 0 features")
+                            
+                    except Exception as ee_error:
+                        logger.error(f"Failed to access Earth Engine asset: {ee_error}")
+                        raise Exception(f"Cannot access Earth Engine asset '{training_ee_path}': {str(ee_error)}")
+                    
+                    # Filter by AOI if provided
+                    if aoi_geometry:
+                        logger.info("Filtering by AOI bounds...")
+                        logger.info(f"AOI geometry type: {type(aoi_geometry)}")
+                        try:
+                            # Convert AOI to EE geometry based on type
+                            if hasattr(aoi_geometry, 'geometry') and hasattr(aoi_geometry.geometry, 'iloc'):
+                                # It's a GeoDataFrame - get the first geometry
+                                geom = aoi_geometry.geometry.iloc[0]
+                                ee_geom = ee.Geometry(geom.__geo_interface__)
+                                training_fc = training_fc.filterBounds(ee_geom)
+                            elif hasattr(aoi_geometry, '__geo_interface__'):
+                                # It's a shapely geometry
+                                ee_geom = ee.Geometry(aoi_geometry.__geo_interface__)
+                                training_fc = training_fc.filterBounds(ee_geom)
+                            else:
+                                # Assume it's already an EE geometry
+                                training_fc = training_fc.filterBounds(aoi_geometry)
+                            
+                            filtered_count = training_fc.size().getInfo()
+                            logger.info(f"Features after AOI filter: {filtered_count}")
+                            
+                            if filtered_count == 0:
+                                logger.warning("AOI filtering resulted in 0 features - using original dataset")
+                                # Reload original dataset without AOI filter
+                                training_fc = ee.FeatureCollection(training_ee_path)
+                        except Exception as filter_error:
+                            logger.error(f"AOI filtering failed: {filter_error}")
+                            logger.info("Using original dataset without AOI filter")
+                            # Keep original training_fc without filtering
+                    
+                    # Manual conversion to GeoDataFrame with size limit
+                    logger.info("Converting to GeoDataFrame...")
+                    
+                    # Check collection size and limit if necessary
+                    collection_size = training_fc.size().getInfo()
+                    logger.info(f"Collection size: {collection_size}")
+                    
+                    if collection_size > 5000:
+                        logger.warning(f"Collection has {collection_size} features, limiting to 5000 for processing")
+                        training_fc = training_fc.limit(5000)
+                        collection_size = 5000
+                    
+                    if collection_size == 0:
+                        logger.warning("No features found in collection")
+                        return {
+                            'training_data': gpd.GeoDataFrame(columns=['kelas', 'geometry']),
+                            'landcover_df': landcover_df,
+                            'class_field': 'kelas',
+                            'validation_results': {
+                                'total_points': 0,
+                                'valid_points': 0,
+                                'points_after_class_filter': 0,
+                                'invalid_classes': [],
+                                'outside_aoi': [],
+                                'insufficient_samples': [],
+                                'warnings': ['No training data found in AOI']
+                            }
+                        }
+                    
+                    info = training_fc.getInfo()
+                    features = info['features']
+                    logger.info(f"Features to convert: {len(features)}")
+                    
+                    data = []
+                    for f in features:
+                        try:
+                            geom = shape(f['geometry'])
+                            props = f['properties']
+                            props['geometry'] = geom
+                            data.append(props)
+                        except Exception as geom_error:
+                            logger.warning(f"Error processing feature geometry: {geom_error}")
+                            continue
 
-# --- System response 3.2.a ---
-class SyncTrainData:
-    """
-    Module 3: Syncronize input data training with the defined class
-    Validates training data against land cover classes, AOI, and sample availibity
-    """
-    
-    # --- System response 3.2.a ---
+                    logger.info(f"Successfully processed {len(data)} features")
+                    training_gdf = gpd.GeoDataFrame(data, geometry='geometry', crs='EPSG:4326')
+                    
+                    # Log class field info
+                    if 'kelas' in training_gdf.columns:
+                        unique_classes = training_gdf['kelas'].unique()
+                        logger.info(f"Unique classes in training data: {unique_classes}")
+                        logger.info(f"Class counts: {training_gdf['kelas'].value_counts().to_dict()}")
+                    else:
+                        logger.warning("'kelas' field not found in training data")
+                        logger.info(f"Available columns: {training_gdf.columns.tolist()}")
 
-    def LoadTrainData(landcover_df, aoi_geometry, training_shp_path=None, training_ee_path=None, batch_size=5000):
-        """
-        Load training data from shapefile or Earth Engine asset.
-        Supports >5000 features in EE assets using batch download.
-
-        Args:
-            landcover_df: DataFrame from Module 2 with land cover classes
-            aoi_geometry: ee.Geometry or GeoDataFrame representing the AOI
-            training_shp_path: Path to shapefile training data
-            training_ee_path: Earth Engine asset path for training data
-            batch_size: number of features per batch (default 5000)
-
-        Returns:
-            Dictionary with training_data and validation_results
-        """
-        validation_results = {
-            'total_points': 0,
-            'valid_points': 0,
-            'points_after_class_filter': 0,
-            'invalid_classes': [],
-            'outside_aoi': [],
-            'insufficient_samples': [],
-            'warnings': []
-        }
-
-        # =========================
-        # Case 1: From Shapefile
-        # =========================
-        if training_shp_path:
-            training_data = gpd.read_file(training_shp_path)
-
-        # =========================
-        # Case 2: From Earth Engine
-        # =========================
-        elif training_ee_path:
-            # Filter inside AOI *before* counting / batch downloading
-            ee_fc = ee.FeatureCollection(training_ee_path).filterBounds(aoi_geometry)
-            size = ee_fc.size().getInfo()
-
-            geometries = []
-            properties_list = []
-
-            if size <= batch_size:
-                features = ee_fc.getInfo()["features"]
-                for feature in features:
-                    geom = shape(feature["geometry"])
-                    properties_list.append(feature["properties"])
-                    geometries.append(geom)
-            else:
-                print(f"[INFO] Large FeatureCollection detected ({size} inside AOI)")
-
-                for offset in range(0, size, batch_size):
-                    batch = ee_fc.toList(batch_size, offset).getInfo()
-                    for feature in batch:
-                        geom = shape(feature["geometry"])
-                        properties_list.append(feature["properties"])
-                        geometries.append(geom)
-
-
-            training_data = gpd.GeoDataFrame(properties_list, geometry=geometries, crs="EPSG:4326")
-
-        else:
-            raise ValueError("Please provide either training_shp_path or training_ee_path")
-
-        # Update validation metadata
-        validation_results['total_points'] = len(training_data)
-
-        return {
-            'training_data': training_data,
-            'landcover_df': landcover_df,
-            'aoi_geometry': aoi_geometry,
-            'validation_results': validation_results
-        }
-
-
-    def SetClassField(data_dict, field_name, standardize_column_name=True):
-        """
-        Define which field contains the land cover class and optionally standardize the column name
-        to match the classification table structure.
-        
-        Args:
-            data_dict: Dictionary containing training data and validation results
-            field_name: Name of the field containing class information in the training data
-            standardize_column_name: If True, rename the class field to match the classification table ID column
-        """
-        training_data = data_dict['training_data']
-        landcover_df = data_dict['landcover_df']
-        
-        if field_name not in training_data.columns:
-            available_fields = list(training_data.columns)
-            raise ValueError(f"Field '{field_name}' not found. Available fields: {available_fields}")
-        
-        # Get the ID column name from the classification table (first column)
-        classification_id_col = landcover_df.columns[0]
-        
-        if standardize_column_name and field_name != classification_id_col:
-            # Rename the training data column to match the classification table ID column
-            training_data = training_data.rename(columns={field_name: classification_id_col})
-            data_dict['training_data'] = training_data
-            data_dict['class_field'] = classification_id_col
-            
-            print(f"INFO: Renamed training data column '{field_name}' to '{classification_id_col}' to match classification table")
-        else:
-            data_dict['class_field'] = field_name
-        
-        return data_dict
-
-    def StandardizeClassColumns(data_dict, class_id_field):
-        """
-        Standardize training data columns to match the classification table structure.
-        This ensures consistency between training data and classification scheme.
-        
-        Args:
-            data_dict: Dictionary containing training data, landcover_df, and validation results
-            class_id_field: Name of the field in training data that contains class IDs
-            
-        Returns:
-            dict: Updated data_dict with standardized column names
-        """
-        training_data = data_dict['training_data']
-        landcover_df = data_dict['landcover_df']
-        
-        # Get column names from classification table
-        classification_id_col = landcover_df.columns[0]    # ID column
-        classification_name_col = landcover_df.columns[1]  # Class name column
-        
-        # Check if the specified class ID field exists
-        if class_id_field not in training_data.columns:
-            available_fields = list(training_data.columns)
-            raise ValueError(f"Class ID field '{class_id_field}' not found. Available fields: {available_fields}")
-        
-        # Rename the class ID column to match classification table
-        if class_id_field != classification_id_col:
-            training_data = training_data.rename(columns={class_id_field: classification_id_col})
-            print(f"INFO: Renamed '{class_id_field}' to '{classification_id_col}' to match classification table")
-        
-        # Create a lookup table for class names
-        class_lookup = dict(zip(landcover_df[classification_id_col], landcover_df[classification_name_col]))
-        
-        # Add or update the class name column
-        training_data[classification_name_col] = training_data[classification_id_col].map(class_lookup)
-        
-        # Handle any unmapped values
-        unmapped_mask = training_data[classification_name_col].isna()
-        if unmapped_mask.any():
-            unmapped_ids = training_data.loc[unmapped_mask, classification_id_col].unique()
-            print(f"WARNING: Found unmapped class IDs: {list(unmapped_ids)}")
-            print("These will be filtered out in the validation step.")
-        
-        # Update the data dictionary
-        data_dict['training_data'] = training_data
-        data_dict['class_field'] = classification_id_col
-        
-        # Ensure proper column order: ID, Name, then other columns
-        other_cols = [col for col in training_data.columns 
-                     if col not in [classification_id_col, classification_name_col]]
-        new_column_order = [classification_id_col, classification_name_col] + other_cols
-        training_data = training_data[new_column_order]
-        data_dict['training_data'] = training_data
-        
-        print(f"INFO: Standardized training data columns to match classification table structure")
-        print(f"      - ID column: '{classification_id_col}'")
-        print(f"      - Name column: '{classification_name_col}'")
-        
-        return data_dict
-
-    def ValidClass(data_dict, use_class_ids=True):
-        """
-        Validate training classes against the classification table and filter invalid entries.
-        
-        Args:
-            data_dict (dict): Contains training_data, landcover_df, class_field, and validation_results
-            use_class_ids (bool): If True, validate using class IDs (column 0), if False use class names (column 1)
-        
-        Returns:
-            dict: updated data_dict with validated training data
-        """
-
-        training_data = data_dict['training_data']
-        landcover_df = data_dict['landcover_df']
-        class_field = data_dict['class_field']
-        validation_results = data_dict['validation_results']
-
-        # Determine which column to use for validation
-        if use_class_ids:
-            # Use class IDs (first column) for validation
-            valid_classes = set(landcover_df.iloc[:, 0].values)
-            validation_column = "class IDs"
-        else:
-            # Use class names (second column) for validation  
-            valid_classes = set(landcover_df.iloc[:, 1].values)
-            validation_column = "class names"
-
-        # Get training data classes 
-        training_classes = set(training_data[class_field].unique())
-
-        # Identify invalid classes
-        invalid_classes = training_classes - valid_classes
-
-        # Filter & record invalid classes
-        if invalid_classes:
-            print(f"INFO: Found {len(invalid_classes)} invalid {validation_column} in training data")
-            
-            for invalid_class in invalid_classes:
-                count = len(training_data[training_data[class_field] == invalid_class])
-                validation_results['invalid_classes'].append({
-                    'class': invalid_class,
-                    'count': count
-                })
-                print(f"      - Invalid {validation_column[:-1]}: {invalid_class} ({count} points)")
-
-            original_count = len(training_data)
-            training_data = training_data[training_data[class_field].isin(valid_classes)].copy()
-            removed_count = original_count - len(training_data)
-
-            validation_results['warnings'].append(
-                f"Removed {removed_count} points with invalid {validation_column} not in classification table"
-            )
-            print(f"INFO: Removed {removed_count} points with invalid {validation_column}")
-
-        # Ensure both ID and name columns exist and are properly mapped
-        class_id_col = landcover_df.columns[0]
-        class_name_col = landcover_df.columns[1]
-
-        # If we don't have the name column, add it
-        if class_name_col not in training_data.columns:
-            # Create lookup table and add name column
-            class_lookup = dict(zip(landcover_df[class_id_col], landcover_df[class_name_col]))
-            training_data[class_name_col] = training_data[class_field].map(class_lookup)
-            print(f"INFO: Added '{class_name_col}' column to training data")
-
-        # Clean up any duplicate or unnecessary columns
-        cols_to_keep = [class_id_col, class_name_col]
-        other_cols = [col for col in training_data.columns if col not in cols_to_keep]
-        
-        # Remove any columns that might be duplicates of our standardized columns
-        duplicate_patterns = ['lulc_type', 'class_name', 'lulc_class', 'landcover', 'lulc', 'mapped', 'class']
-        for col in other_cols[:]:  # Use slice copy to avoid modification during iteration
-            if any(pattern in col.lower() for pattern in duplicate_patterns) and col != class_field:
-                if col in training_data.columns:
-                    training_data = training_data.drop(columns=[col])
-                    print(f"INFO: Removed duplicate column '{col}'")
-                    other_cols.remove(col)
-
-        # Ensure proper column order: ID, Name, geometry, then other columns
-        geometry_cols = [col for col in other_cols if col == 'geometry']
-        remaining_cols = [col for col in other_cols if col != 'geometry']
-        
-        final_column_order = cols_to_keep + geometry_cols + remaining_cols
-        training_data = training_data[[col for col in final_column_order if col in training_data.columns]]
-
-        # Update result dict
-        validation_results['points_after_class_filter'] = len(training_data)
-        data_dict['training_data'] = training_data
-
-        print(f"INFO: Validation complete. {len(training_data)} valid training points remain.")
-
-        return data_dict
-
-
-    def CheckSufficiency(data_dict, min_samples=20):
-        """
-        Check if each class has sufficient training samples
-        
-        Args:
-            data_dict: Dictionary containing training data, landcover_df, and validation_results
-            min_samples: Minimum number of samples required per class
-        """
-        training_data = data_dict['training_data']
-        landcover_df = data_dict['landcover_df']
-        class_field = data_dict['class_field']
-        validation_results = data_dict['validation_results']
-        
-        # Get class counts from training data
-        class_counts = training_data[class_field].value_counts()
-        insufficient_classes = []
-        
-        for idx, row in landcover_df.iterrows():
-            class_name = row.iloc[1]  # Use iloc to get second column value
-            
-            if class_name in class_counts:
-                count = class_counts[class_name]
-                if count < min_samples:
-                    insufficient_classes.append({
-                        'class': class_name,
-                        'count': count,
-                        'needed': min_samples - count
-                    })
-                    validation_results['insufficient_samples'].append({
-                        'class': class_name,
-                        'count': count
-                    })
-        
-        if insufficient_classes:
-            validation_results['warnings'].append(
-                f"Found {len(insufficient_classes)} class(es) with insufficient samples (< {min_samples})"
-            )
-        
-        # Check zero samples
-        zero_sample_classes = []
-        for idx, row in landcover_df.iterrows():
-            class_name = row.iloc[1]  # Use iloc to get second column value
-            if class_name not in class_counts:
-                zero_sample_classes.append(class_name)
-        
-        if zero_sample_classes:
-            validation_results['warnings'].append(
-                f"Found {len(zero_sample_classes)} class(es) with no training samples"
-            )
-        
-        return data_dict
-
-    def FilterTrainAoi(data_dict):
-        """
-        Filter training points that fall within AOI
-        
-        Args:
-            data_dict: Dictionary containing training data, aoi_geometry, and validation_results
-        """
-        training_data = data_dict['training_data']
-        aoi_geometry = data_dict['aoi_geometry']
-        validation_results = data_dict['validation_results']
-        
-        if isinstance(aoi_geometry, ee.Geometry):
-            aoi_info = aoi_geometry.getInfo()
-            aoi_type = aoi_info['type']
-            
-            if aoi_type == 'Polygon':
-                aoi_coords = aoi_info['coordinates']
-                aoi_polygon = Polygon(aoi_coords[0])
-            elif aoi_type == 'MultiPolygon':
-                from shapely.geometry import MultiPolygon
-                polygons = [Polygon(coords[0]) for coords in aoi_info['coordinates']]
-                aoi_polygon = MultiPolygon(polygons)
-            else:
-                aoi_polygon = shape(aoi_info)
-            
-            aoi_gdf = gpd.GeoDataFrame([1], geometry=[aoi_polygon], crs='EPSG:4326')
-        else:
-            aoi_gdf = aoi_geometry
-        
-        if training_data.crs != aoi_gdf.crs:
-            training_data = training_data.to_crs(aoi_gdf.crs)
-        
-        within_aoi = training_data.geometry.within(aoi_gdf.unary_union)
-        points_inside = training_data[within_aoi].copy()
-        points_outside = training_data[~within_aoi].copy()
-        
-        if len(points_outside) > 0:
-            for idx, row in points_outside.iterrows():
-                class_name = row[data_dict['class_field']] if 'class_field' in data_dict else 'N/A'
-                coords = row.geometry.coords[0]
-                outside_info = {
-                    'index': idx,
-                    'class': class_name,
-                    'lon': coords[0],
-                    'lat': coords[1]
-                }
-                validation_results['outside_aoi'].append(outside_info)
-            
-            validation_results['warnings'].append(
-                f"{len(points_outside)} points outside AOI will be ignored"
-            )
-        
-        validation_results['valid_points'] = len(points_inside)
-        data_dict['training_data'] = points_inside
-        data_dict['points_outside'] = points_outside
-        
-        return data_dict
-
-    def TrainDataRaw(training_data, landcover_df, class_field):
-        """
-        Create a table showing training data distribution, ensuring that all
-        classes listed in landcover_df appear, even if missing in training_data.
-
-        Args:
-            training_data: DataFrame containing training data
-            landcover_df: DataFrame containing land cover class definitions
-            class_field: Name of the column containing class information in training_data
-
-        Returns:
-            table_df: pandas DataFrame containing the full LULC distribution table
-            total_samples: Total number of training samples
-            insufficient_df: DataFrame containing only insufficient or missing classes
-        """
-        if training_data is None or len(training_data) == 0:
-            return None, 0, None
-
-        # Align class names using landcover_df as reference
-        id_col = landcover_df.columns[0]
-        name_col = landcover_df.columns[1]
-
-        # If training_data[class_field] is numeric (ID) OR mismatched,
-        # map it to the correct class name using landcover_df
-        lut = dict(zip(landcover_df[id_col], landcover_df[name_col]))
-
-        # Create a new working column "LULC_Class_Mapped"
-        training_data["LULC_Class_Mapped"] = training_data[class_field].map(lut).fillna(training_data[class_field])
-
-        # Count distribution from the mapped name 
-        class_counts = training_data["LULC_Class_Mapped"].value_counts()
-        total_valid = len(training_data)
-
-        # Build final table 
-        table_data = []
-        for _, row in landcover_df.iterrows():
-            class_id = row[id_col]
-            class_name = row[name_col]
-
-            if class_name in class_counts:
-                count = class_counts[class_name]
-                percentage = (count / total_valid) * 100
-                status = "Sufficient" if count >= 20 else "Insufficient"
-            else:
-                count, percentage, status = 0, 0, "No Samples"
-
-            table_data.append({
-                'ID': class_id,
-                'LULC_class': class_name,
-                'Sample_Count': count,
-                'Percentage': percentage,
-                'Status': status
-            })
-
-        table_df = pd.DataFrame(table_data)
-
-        # Identify missing/insufficient classes 
-        insufficient_df = table_df[table_df['Status'].isin(['Insufficient', 'No Samples'])].copy()
-        if insufficient_df.empty:
-            insufficient_df = None
-
-        return table_df, total_valid, insufficient_df
-
-    def ProcessTrainingData(landcover_df, aoi_geometry, training_shp_path=None, training_ee_path=None, 
-                           class_id_field=None, batch_size=5000, min_samples=20):
-        """
-        Complete workflow to load, standardize, and validate training data.
-        This is a convenience method that combines all the individual steps.
-        
-        Args:
-            landcover_df: DataFrame from Module 2 with land cover classes
-            aoi_geometry: ee.Geometry or GeoDataFrame representing the AOI
-            training_shp_path: Path to shapefile training data
-            training_ee_path: Earth Engine asset path for training data
-            class_id_field: Name of the field containing class IDs in training data
-            batch_size: Number of features per batch for EE downloads (default 5000)
-            min_samples: Minimum number of samples required per class (default 20)
-            
-        Returns:
-            Dictionary with processed training_data and validation_results
-        """
-        print("=== Starting Complete Training Data Processing Workflow ===")
-        
-        # Step 1: Load training data
-        print("Step 1: Loading training data...")
-        data_dict = SyncTrainData.LoadTrainData(
-            landcover_df=landcover_df,
-            aoi_geometry=aoi_geometry,
-            training_shp_path=training_shp_path,
-            training_ee_path=training_ee_path,
-            batch_size=batch_size
-        )
-        
-        # Step 2: Standardize columns (if class_id_field is provided)
-        if class_id_field:
-            print(f"Step 2: Standardizing columns (class ID field: '{class_id_field}')...")
-            data_dict = SyncTrainData.StandardizeClassColumns(data_dict, class_id_field)
-        else:
-            print("Step 2: Skipping column standardization (no class_id_field provided)")
-            # Set class field to first column if not specified
-            data_dict['class_field'] = data_dict['training_data'].columns[0]
-        
-        # Step 3: Validate classes
-        print("Step 3: Validating classes...")
-        data_dict = SyncTrainData.ValidClass(data_dict, use_class_ids=True)
-        
-        # Step 4: Check sample sufficiency
-        print("Step 4: Checking sample sufficiency...")
-        data_dict = SyncTrainData.CheckSufficiency(data_dict, min_samples=min_samples)
-        
-        # Step 5: Filter by AOI
-        print("Step 5: Filtering by AOI...")
-        data_dict = SyncTrainData.FilterTrainAoi(data_dict)
-        
-        # Step 6: Generate summary
-        print("Step 6: Generating summary...")
-        table_df, total_samples, insufficient_df = SyncTrainData.TrainDataRaw(
-            training_data=data_dict.get('training_data'),
-            landcover_df=data_dict.get('landcover_df'),
-            class_field=data_dict.get('class_field')
-        )
-        
-        # Add summary to results
-        data_dict['summary_table'] = table_df
-        data_dict['total_samples'] = total_samples
-        data_dict['insufficient_classes'] = insufficient_df
-        
-        print("=== Training Data Processing Complete ===")
-        print(f"Final result: {total_samples} valid training samples")
-        
-        return data_dict
-    
-    def generate_report(self, output_path='modul-3_report.txt'):
-        """
-        Generate a text report of the validation results
-        """
-        
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
-        report_lines = [
-            "="*70,
-            "REPORT",
-            "="*70,
-            f"Generated: {timestamp}",
-            "",
-            "SUMMARY",
-            "-"*70,
-            f"Total training points loaded: {self.validation_results['total_points']}",
-            f"Points after class filtering: {self.validation_results['points_after_class_filter']}",
-            f"Valid points (inside AOI + valid classes): {self.validation_results['valid_points']}",
-            f"Points outside AOI: {len(self.validation_results['outside_aoi'])}",
-            f"Invalid classes found: {len(self.validation_results['invalid_classes'])}",
-            f"Classes with insufficient samples: {len(self.validation_results['insufficient_samples'])}",
-            "-"*70,
-        ]
-        
-        # Use column order:
-        # 0 = ID, 1 = Class Name, 2 = Color Palette
-        # for idx, row in self.landcover_df.iterrows():
-        #    report_lines.append(f"  {row.iloc[0]}. {row.iloc[1]} - {row.iloc[2]}")
-        
-        if self.training_data is not None and len(self.training_data) > 0:
-            report_lines.extend([
-                "",
-                "VALID TRAINING DATA DISTRIBUTION (Module 2 Classes Only)",
-                "-"*70,
-            ])
-            
-            class_counts = self.training_data[self.class_field].value_counts()
-            total_valid = len(self.training_data)
-            
-            report_lines.append(f"{'ID':<5} {'LULC_class':<30} {'Sample_Count':<15} {'Percentage':<12} {'Status':<20}")
-            report_lines.append("-" * 82)
-            
-            for idx, row in self.landcover_df.iterrows():
-                class_id = row.iloc[0]
-                class_name = row.iloc[1]
-                
-                if class_name in class_counts:
-                    count = class_counts[class_name]
-                    percentage = (count / total_valid) * 100
-                    status = "Sufficient" if count >= 20 else "Insufficient"
+                    return {
+                        'training_data': training_gdf,
+                        'landcover_df': landcover_df,
+                        'class_field': 'kelas',
+                        'validation_results': {
+                            'total_points': len(training_gdf),
+                            'valid_points': len(training_gdf),
+                            'points_after_class_filter': len(training_gdf),
+                            'invalid_classes': [],
+                            'outside_aoi': [],
+                            'insufficient_samples': [],
+                            'warnings': []
+                        }
+                    }
                 else:
-                    count, percentage, status = 0, 0, "No Samples"
+                    raise ValueError("No training data path provided")
+                    
+            except Exception as e:
+                logger.error(f"Error loading training data: {str(e)}")
+                import traceback
+                logger.error(f"Full traceback: {traceback.format_exc()}")
+                return {
+                    'training_data': None,
+                    'landcover_df': landcover_df,
+                    'class_field': 'kelas',
+                    'validation_results': {
+                        'total_points': 0,
+                        'valid_points': 0,
+                        'points_after_class_filter': 0,
+                        'invalid_classes': [],
+                        'outside_aoi': [],
+                        'insufficient_samples': [],
+                        'warnings': [str(e)]
+                    }
+                }
+        
+        @staticmethod
+        def SetClassField(train_data_dict, class_field):
+            """Set the class field for training data."""
+            if train_data_dict and 'training_data' in train_data_dict:
+                train_data_dict['class_field'] = class_field
+            return train_data_dict
+        
+        @staticmethod
+        def ValidClass(train_data_dict, use_class_ids=False):
+            """Validate classes in training data."""
+            if train_data_dict and train_data_dict.get('training_data') is not None:
+                training_data = train_data_dict['training_data']
+                class_field = train_data_dict.get('class_field', 'kelas')
+                landcover_df = train_data_dict.get('landcover_df')
                 
-                report_lines.append(
-                    f"{class_id:<5} {class_name:<30} {count:<15} {percentage:>10.2f}%  {status:<20}"
-                )
+                logger.info(f"Validating classes with use_class_ids={use_class_ids}")
+                logger.info(f"Class field: {class_field}")
+                logger.info(f"Training data type: {type(training_data)}")
+                
+                if landcover_df is not None:
+                    logger.info(f"Landcover DF columns: {landcover_df.columns.tolist()}")
+                    if use_class_ids and 'ID' in landcover_df.columns:
+                        logger.info(f"Valid IDs in landcover_df: {landcover_df['ID'].tolist()}")
+                    elif 'LULC_Type' in landcover_df.columns:
+                        logger.info(f"Valid LULC_Types in landcover_df: {landcover_df['LULC_Type'].tolist()}")
+                
+                valid_classes = []
+                invalid_classes = []
+                
+                if isinstance(training_data, gpd.GeoDataFrame):
+                    logger.info(f"Processing GeoDataFrame with {len(training_data)} features")
+                    if class_field in training_data.columns:
+                        classes = training_data[class_field].unique()
+                        logger.info(f"Unique classes in training data: {classes}")
+                        
+                        for cls in classes:
+                            if pd.isna(cls):
+                                continue
+                            if use_class_ids:
+                                if cls in landcover_df['ID'].values:
+                                    valid_classes.append(cls)
+                                    logger.info(f"Valid class ID: {cls}")
+                                else:
+                                    invalid_classes.append(cls)
+                                    logger.warning(f"Invalid class ID: {cls}")
+                            else:
+                                if cls in landcover_df['LULC_Type'].values:
+                                    valid_classes.append(cls)
+                                    logger.info(f"Valid class type: {cls}")
+                                else:
+                                    invalid_classes.append(cls)
+                                    logger.warning(f"Invalid class type: {cls}")
+                        
+                        logger.info(f"Valid classes: {valid_classes}")
+                        logger.info(f"Invalid classes: {invalid_classes}")
+                        
+                        filtered_data = training_data[training_data[class_field].isin(valid_classes)]
+                        logger.info(f"Features after class validation: {len(filtered_data)}")
+                        
+                        train_data_dict['training_data'] = filtered_data
+                        train_data_dict['validation_results']['points_after_class_filter'] = len(filtered_data)
+                        train_data_dict['validation_results']['invalid_classes'] = invalid_classes
+                    else:
+                        logger.error(f"Class field '{class_field}' not found in training data columns: {training_data.columns.tolist()}")
+                
+                elif isinstance(training_data, ee.FeatureCollection):
+                    logger.info("Processing Earth Engine FeatureCollection")
+                    # Filter non-null first
+                    non_null_fc = training_data.filter(ee.Filter.notNull([class_field]))
+                    # Get distinct classes
+                    classes = non_null_fc.aggregate_array(class_field).distinct().getInfo()
+                    logger.info(f"Unique classes in EE FeatureCollection: {classes}")
+                    
+                    for cls in classes:
+                        if use_class_ids:
+                            if cls in landcover_df['ID'].values.tolist():
+                                valid_classes.append(cls)
+                            else:
+                                invalid_classes.append(cls)
+                        else:
+                            if cls in landcover_df['LULC_Type'].values.tolist():
+                                valid_classes.append(cls)
+                            else:
+                                invalid_classes.append(cls)
+                    
+                    logger.info(f"Valid classes: {valid_classes}")
+                    logger.info(f"Invalid classes: {invalid_classes}")
+                    
+                    # Filter to valid classes
+                    if valid_classes:
+                        filter_valid = ee.Filter.inList(class_field, valid_classes)
+                        filtered_fc = non_null_fc.filter(filter_valid)
+                    else:
+                        filtered_fc = ee.FeatureCollection([])
+                    
+                    filtered_count = filtered_fc.size().getInfo()
+                    logger.info(f"Features after class validation: {filtered_count}")
+                    
+                    train_data_dict['training_data'] = filtered_fc
+                    train_data_dict['validation_results']['points_after_class_filter'] = filtered_count
+                    train_data_dict['validation_results']['invalid_classes'] = invalid_classes
             
-            report_lines.append("-" * 82)
-            report_lines.append(f"{'TOTAL':<5} {'':<30} {total_valid:<15} {100.00:>10.2f}%")
+            return train_data_dict
         
-        # Write report
-        report_text = "\n".join(report_lines)
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(report_text)
+        @staticmethod
+        def CheckSufficiency(train_data_dict, min_samples=20):
+            """Check if there are sufficient samples per class."""
+            if train_data_dict and train_data_dict.get('training_data') is not None:
+                training_data = train_data_dict['training_data']
+                class_field = train_data_dict.get('class_field', 'kelas')
+                
+                if class_field in training_data.columns:
+                    class_counts = training_data[class_field].value_counts()
+                    insufficient_classes = class_counts[class_counts < min_samples].index.tolist()
+                    train_data_dict['validation_results']['insufficient_samples'] = insufficient_classes
+            
+            return train_data_dict
         
-        print(f"\nModul 3 report saved to: {output_path}")
-        print(report_text)
+        @staticmethod
+        def FilterTrainAoi(train_data_dict):
+            """Filter training data by AOI."""
+            if train_data_dict and train_data_dict.get('training_data') is not None:
+                # Simplified AOI filtering
+                training_data = train_data_dict['training_data']
+                aoi_geometry = train_data_dict.get('aoi_geometry')
+                
+                if aoi_geometry is not None and hasattr(aoi_geometry, 'geometry'):
+                    # Perform spatial filter (simplified)
+                    try:
+                        filtered_data = gpd.sjoin(training_data, aoi_geometry, how='inner', predicate='within')
+                        train_data_dict['training_data'] = filtered_data
+                        train_data_dict['validation_results']['valid_points'] = len(filtered_data)
+                    except Exception as e:
+                        logger.warning(f"AOI filtering failed: {str(e)}")
+            
+            return train_data_dict
         
-        return report_text
+        @staticmethod
+        def TrainDataRaw(training_data, landcover_df, class_field):
+            """Create raw training data summary."""
+            if training_data is None or training_data.empty:
+                return pd.DataFrame(), 0, pd.DataFrame()
+            
+            try:
+                # Create summary table
+                summary_data = []
+                total_samples = len(training_data)
+                
+                if class_field in training_data.columns:
+                    class_counts = training_data[class_field].value_counts()
+                    
+                    # Create mapping from ID to LULC_Type
+                    id_to_lulc_type = {}
+                    if landcover_df is not None and 'ID' in landcover_df.columns and 'LULC_Type' in landcover_df.columns:
+                        id_to_lulc_type = dict(zip(landcover_df['ID'], landcover_df['LULC_Type']))
+                    
+                    for class_id, count in class_counts.items():
+                        percentage = (count / total_samples * 100) if total_samples > 0 else 0
+                        
+                        # Map ID to LULC_Type name if available
+                        if class_id in id_to_lulc_type:
+                            lulc_class_name = id_to_lulc_type[class_id]
+                        else:
+                            lulc_class_name = str(class_id)  # Fallback to ID if mapping not found
+                        
+                        summary_data.append({
+                            'ID': class_id,
+                            'LULC_class': lulc_class_name,
+                            'Sample_Count': count,
+                            'Percentage': percentage
+                        })
+                
+                summary_df = pd.DataFrame(summary_data)
+                
+                # Create insufficient samples table
+                insufficient_data = []
+                for _, row in summary_df.iterrows():
+                    if row['Sample_Count'] < 20:
+                        insufficient_data.append({
+                            'ID': row['ID'],
+                            'LULC_class': row['LULC_class'],
+                            'Sample_Count': row['Sample_Count'],
+                            'Needed': 20 - row['Sample_Count'],
+                            'Percentage': row['Percentage'],
+                            'Status': 'Insufficient' if row['Sample_Count'] > 0 else 'No Samples'
+                        })
+                
+                insufficient_df = pd.DataFrame(insufficient_data)
+                
+                return summary_df, total_samples, insufficient_df
+                
+            except Exception as e:
+                logger.error(f"Error creating training data summary: {str(e)}")
+                return pd.DataFrame(), 0, pd.DataFrame()
     
-    def get_valid_training_data(self):
-        """
-        Return validated training data
-        """
-        return self.training_data
-
-# ----- System response 3.5 -----
-class SplitTrainData:
-
-    """
-    """
-
-    def SplitProcess(TrainDataRecap, TrainSplitPct=0.8, random_state=42, class_column=None):
-        """
-        Split training data into train and validation sets.
+    class SplitTrainData:
+        """Legacy data splitting functionality."""
         
-        Parameters:
-        -----------
-        TrainDataRecap : GeoDataFrame
-            The input geodataframe containing training data
-        TrainSplitPct : float, optional (default=0.8)
-            Percentage of data to use for training (0.0 to 1.0)
-        random_state : int, optional (default=42)
-            Random seed for reproducibility
-        class_column : str, optional
-            Name of the column containing class information for stratification.
-            If None, will try to auto-detect from common names.
-        
-        Returns:
-        --------
-        tuple
-            (TrainDataFinal, ValidDataFinal) - Training and validation GeoDataFrames
-        """
-        from sklearn.model_selection import train_test_split
-        
-        # Auto-detect class column if not provided
-        if class_column is None:
-            possible_class_cols = ['kelas', 'LULC_Type', 'class', 'Class', 'LULC_ID', 'class_id']
-            for col in possible_class_cols:
-                if col in TrainDataRecap.columns:
-                    class_column = col
-                    break
-            
-            if class_column is None:
-                print("Warning: Could not auto-detect class column. Using random split without stratification.")
-        
-        # Perform train-test split with stratification if possible
-        try:
-            if class_column and class_column in TrainDataRecap.columns:
-                TrainDataFinal, ValidDataFinal = train_test_split(
-                    TrainDataRecap,
-                    train_size=TrainSplitPct,
-                    stratify=TrainDataRecap[class_column],
+        @staticmethod
+        def SplitProcess(train_data, TrainSplitPct=0.7, random_state=123):
+            """Split training data into train and validation sets."""
+            try:
+                if train_data is None or train_data.empty:
+                    return gpd.GeoDataFrame(), gpd.GeoDataFrame()
+                
+                # Use enhanced splitter as fallback
+                return create_legacy_compatible_split(
+                    combined_data=train_data,
+                    train_ratio=TrainSplitPct,
                     random_state=random_state
                 )
-            else:
-                raise ValueError("Class column not found, using random split")
-        except ValueError as e:
-            print(f"Stratified split not possible ({e}), using random split.")
-            TrainDataFinal, ValidDataFinal = train_test_split(
-                TrainDataRecap,
-                train_size=TrainSplitPct,
-                random_state=random_state
-            )
-
-        # Check and remove overlaps
-        overlap = TrainDataFinal.index.intersection(ValidDataFinal.index)
-        if len(overlap) > 0:
-            print(f"Overlap detected ({len(overlap)} rows). Removing duplicates.")
-            ValidDataFinal = ValidDataFinal.drop(index=overlap)
-        
-        return TrainDataFinal, ValidDataFinal
-
-    def PlotTrainValidInteractive(TrainDataFinal, AOI, ValidDataFinal=None):
-        """
-        Plot training and optional validation data interactively using Folium.
-        
-        Parameters:
-            TrainDataFinal (GeoDataFrame): Training point data.
-            AOI (GeoDataFrame or ee.Geometry): AOI geometry.
-            ValidDataFinal (GeoDataFrame, optional): Validation point data. Defaults to None.
-        """
-        
-        # Convert AOI (if ee.Geometry) to GeoDataFrame 
-        if not isinstance(AOI, gpd.GeoDataFrame):
-            try:
-                # If AOI is an ee.Geometry, convert to GeoJSON
-                aoi_geojson = AOI.getInfo()
-                # Handle both FeatureCollection and Geometry types
-                if 'type' in aoi_geojson and aoi_geojson['type'] == 'FeatureCollection':
-                    AOI = gpd.GeoDataFrame.from_features(aoi_geojson['features'], crs='EPSG:4326')
-                else:
-                    AOI = gpd.GeoDataFrame.from_features([{
-                        'geometry': aoi_geojson,
-                        'properties': {}
-                    }], crs='EPSG:4326')
+                
             except Exception as e:
-                print("AOI could not be converted:", e)
-                return
-
-        # Get AOI center for map initialization
-        bounds = AOI.total_bounds  # minx, miny, maxx, maxy
-        center = [(bounds[1] + bounds[3]) / 2, (bounds[0] + bounds[2]) / 2]
-
-        # Initialize folium map 
-        m = folium.Map(location=center, zoom_start=10, tiles='OpenStreetMap')
-
-        folium.GeoJson(
-            AOI.__geo_interface__,
-            name="AOI Boundary",
-            style_function=lambda x: {
-                'color': 'blue', 
-                'weight': 3, 
-                'fillOpacity': 0,
-                'opacity': 0.8
-            },
-            tooltip="AOI Boundary"
-        ).add_to(m)
-
-        # Create feature groups for better layer control
-        training_group = folium.FeatureGroup(name="Training Data")
-        validation_group = folium.FeatureGroup(name="Validation Data")
-
-        # Add training points with distinct style
-        for idx, row in TrainDataFinal.iterrows():
-            # Extract coordinates
-            if hasattr(row.geometry, 'x') and hasattr(row.geometry, 'y'):
-                lon, lat = row.geometry.x, row.geometry.y
-            else:
-                # Handle different geometry formats
-                coords = list(row.geometry.coords)[0]
-                lon, lat = coords[0], coords[1]
-            
-            # Create popup with class information
-            popup_text = f"Training Point<br>Class: {row.get('LULC_Type', 'N/A')}"
-            
-            folium.CircleMarker(
-                location=[lat, lon],
-                radius=6,
-                color='green',
-                fill=True,
-                fill_color='green',
-                fill_opacity=0.7,
-                weight=2,
-                popup=folium.Popup(popup_text, max_width=300)
-            ).add_to(training_group)
-
-        if ValidDataFinal is not None and not ValidDataFinal.empty:
-            for idx, row in ValidDataFinal.iterrows():
-                # Extract coordinates
-                if hasattr(row.geometry, 'x') and hasattr(row.geometry, 'y'):
-                    lon, lat = row.geometry.x, row.geometry.y
-                else:
-                    # Handle different geometry formats
-                    coords = list(row.geometry.coords)[0]
-                    lon, lat = coords[0], coords[1]
-                
-                # Create popup with class information
-                popup_text = f"Validation Point<br>Class: {row.get('LULC_Type', 'N/A')}"
-                
-                folium.CircleMarker(
-                    location=[lat, lon],
-                    radius=6,
-                    color='orange',
-                    fill=True,
-                    fill_color='orange', 
-                    fill_opacity=0.7,
-                    weight=2,
-                    popup=folium.Popup(popup_text, max_width=300)
-                ).add_to(validation_group)
-
-        # Add feature groups to map
-        training_group.add_to(m)
-        if ValidDataFinal is not None and not ValidDataFinal.empty:
-            validation_group.add_to(m)
-
-        # Add legend manually
-        legend_html = """
-        <div style="
-            position: fixed;
-            bottom: 20px; left: 20px; width: 180px;
-            background-color: white; z-index:9999; font-size:14px;
-            border:2px solid grey; border-radius:5px; padding: 8px;">
-        <b>Legend</b><br>
-        <i style="background:green; width:10px; height:10px; float:left; margin-right:5px; opacity:0.7"></i> Training Data<br>
-        <i style="background:orange; width:10px; height:10px; float:left; margin-right:5px; opacity:0.7"></i> Validation Data<br>
-        <i style="background:blue; width:10px; height:10px; float:left; margin-right:5px; opacity:0.8"></i> AOI Boundary
-        </div>
-        """
-        m.get_root().html.add_child(folium.Element(legend_html))
-
-        # Add layer control
-        folium.LayerControl().add_to(m)
-
-        # Fit map to show all data
-        if ValidDataFinal is not None and not ValidDataFinal.empty:
-            all_data = pd.concat([TrainDataFinal, ValidDataFinal])
-        else:
-            all_data = TrainDataFinal
+                logger.error(f"Error splitting training data: {str(e)}")
+                return gpd.GeoDataFrame(), gpd.GeoDataFrame()
+    
+    class LULCSamplingTool:
+        """Legacy LULC sampling tool functionality."""
         
-        # Calculate bounds of all points and AOI
-        if not all_data.empty:
-            data_bounds = all_data.total_bounds
-            # Combine AOI bounds and data bounds
-            combined_bounds = [
-                min(bounds[1], data_bounds[1]),  # min lat
-                min(bounds[0], data_bounds[0]),  # min lon
-                max(bounds[3], data_bounds[3]),  # max lat  
-                max(bounds[2], data_bounds[2])   # max lon
-            ]
-            m.fit_bounds([[combined_bounds[0], combined_bounds[1]], 
-                        [combined_bounds[2], combined_bounds[3]]])
-
-        display(m)
-        return m
-
-# ----- System respons 3.3.a -----
-class LULCSamplingTool:
-    """
-    LULC Sampling Tool using ipyleaflet for interactive point sampling.
-
-    This class expects a pandas DataFrame containing class definitions and optionally
-    an Earth Engine FeatureCollection (geometry) for AOI restriction.
-    """
-
-    def __init__(self, lulc_dataframe: pd.DataFrame, aoi_ee_featurecollection: Optional[Any] = None, 
-                 id_column: Optional[str] = None, type_column: Optional[str] = None, 
-                 color_column: Optional[str] = None) -> None:
-        """
-        Initialize the sampling tool.
-
-        Parameters:
-            lulc_dataframe: pd.DataFrame containing at least ID and class/type and color
-            aoi_ee_featurecollection: Optional Earth Engine FeatureCollection/Geometry for AOI
-            id_column: Optional name of the ID column (auto-detected if None)
-            type_column: Optional name of the class/type column (auto-detected if None)
-            color_column: Optional name of the color column (auto-detected if None)
-        """
-        self.lulc_df = lulc_dataframe
-        self.aoi_ee_featurecollection = aoi_ee_featurecollection
-        self.aoi_geometry = None
-        self.training_data: List[Dict[str, Any]] = []
-        self.current_class: Optional[Dict[str, Any]] = None
-        self.markers: List[Marker] = []
-        self.marker_data_map: Dict[Any, Dict[str, Any]] = {}
-        self.aoi_layer = None
-        self.point_counter: Dict[str, int] = {}
-        self.edit_mode: bool = False
-        self.last_click_time: float = 0.0
-
-        # Set column names (user-provided or auto-detected)
-        self.id_column = id_column
-        self.type_column = type_column
-        self.color_column = color_column
-
-        # Detect column names before using them
-        self._detect_columns()
-
-        # Initialize UI and related components
-        self.CreateUi()
-
-        # Initialize point counter using the detected type column
-        for idx, row in self.lulc_df.iterrows():
-            self.point_counter[row[self.type_col]] = 0
+        def __init__(self, lulc_table):
+            self.lulc_table = lulc_table
         
-        # Initialize TrainDataSampling with dynamic column names
-        self.TrainDataSampling = pd.DataFrame(columns=[self.id_col, self.type_col, 'Points', 'Coordinates'])
-
-        # Load AOI if provided
-        if self.aoi_ee_featurecollection is not None:
-            self.LoadAoiFromEe()
-
-        # Create map with dynamic center/zoom
-        # If AOI not loaded, set defaults
-        if not hasattr(self, 'map_center'):
-            self.map_center = [0, 0]
-        if not hasattr(self, 'zoom'):
-            self.zoom = 10
-
-        self.CreateMap()
-
-    def _detect_columns(self) -> None:
-        """
-        Detect column names for ID, type, and color from the DataFrame.
-        """
-        # Auto-detect ID column
-        if self.id_column is None:
-            for col in self.lulc_df.columns:
-                col_lower = col.lower()
-                if col_lower in ['id', 'class_id', 'lulc_id', 'code']:
-                    self.id_column = col
-                    break
-            if self.id_column is None:
-                self.id_column = self.lulc_df.columns[0]  # Default to first column
-
-        # Auto-detect type/class column
-        if self.type_column is None:
-            for col in self.lulc_df.columns:
-                col_lower = col.lower()
-                if 'type' in col_lower or 'class' in col_lower or 'name' in col_lower:
-                    self.type_column = col
-                    break
-            if self.type_column is None:
-                self.type_column = self.lulc_df.columns[1]  # Default to second column
-
-        # Auto-detect color column
-        if self.color_column is None:
-            for col in self.lulc_df.columns:
-                col_lower = col.lower()
-                if 'color' in col_lower or 'palette' in col_lower or 'hex' in col_lower:
-                    self.color_column = col
-                    break
-            if self.color_column is None:
-                self.color_column = self.lulc_df.columns[2] if len(self.lulc_df.columns) > 2 else self.type_column
-
-        # Set the attributes for backward compatibility
-        self.id_col = self.id_column
-        self.type_col = self.type_column
-        self.color_col = self.color_column
-
-    def LoadAoiFromEe(self) -> None:
-        """
-        Load AOI from Earth Engine FeatureCollection (or Geometry) and prepare map center and zoom.
-        """
-        try:
-            # Check if it's already a Geometry or needs .geometry() call
-            if hasattr(self.aoi_ee_featurecollection, 'geometry'):
-                aoi_geojson = self.aoi_ee_featurecollection.geometry().getInfo()
-            else:
-                aoi_geojson = self.aoi_ee_featurecollection.getInfo()
-            self.aoi_gdf = gpd.GeoDataFrame.from_features([{
-                "type": "Feature",
-                "geometry": aoi_geojson,
-                "properties": {}
-            }], crs="EPSG:4326")
-
-            # Use union_all() to merge geometries if needed
-            self.aoi_geometry = self.aoi_gdf.union_all()
-
-            bounds = self.aoi_gdf.bounds
-            minx, miny, maxx, maxy = bounds.iloc[0]
-            self.map_center = [(miny + maxy) / 2, (minx + maxx) / 2]
-
-            width_deg = maxx - minx
-            height_deg = maxy - miny
-            max_dimension = max(width_deg, height_deg)
-
-            if max_dimension > 20:
-                self.zoom = 6
-            elif max_dimension > 10:
-                self.zoom = 7
-            elif max_dimension > 5:
-                self.zoom = 8
-            elif max_dimension > 2:
-                self.zoom = 9
-            elif max_dimension > 1:
-                self.zoom = 10
-            elif max_dimension > 0.5:
-                self.zoom = 11
-            elif max_dimension > 0.2:
-                self.zoom = 12
-            elif max_dimension > 0.1:
-                self.zoom = 13
-            elif max_dimension > 0.05:
-                self.zoom = 14
-            else:
-                self.zoom = 15
-
-            with self.output:
-                print("SUCCESS: AOI loaded from Earth Engine FeatureCollection")
-                print(f"  - CRS: {self.aoi_gdf.crs}")
-                try:
-                    area_value = float(self.aoi_geometry.area)
-                    print(f"  - Area: {area_value:.6f} square degrees")
-                except Exception:
-                    print("  - Area: unavailable")
-                print(f"  - Map center: {self.map_center}")
-                # print(f"  - Zoom level: {self.zoom} (showing entire AOI)")
-
-        except Exception as e:
-            with self.output:
-                print(f"ERROR: Error loading AOI from Earth Engine: {str(e)}")
-            self.aoi_geometry = None
-            self.map_center = [0, 0]
-            self.zoom = 10
-
-    def CreateMap(self) -> None:
-        """
-        Create ipyleaflet map with computed center and zoom, add controls and interaction.
-        """
-        self.map = Map(
-            center=self.map_center,
-            zoom=self.zoom,
-            basemap=basemaps.Esri.WorldImagery,
-            scroll_wheel_zoom=True
-        )
-
-        self.map.add_control(LayersControl())
-
-        if self.aoi_geometry is not None:
-            self.AddAoiLayer()
-
-        # Map interaction event
-        self.map.on_interaction(self.HandleMapClick)
-
-        # Add custom cursor styling
-        self.AddCrosshairCursor()
-
-    def AddCrosshairCursor(self) -> None:
-        """
-        Add CSS that sets the cursor to crosshair over the leaflet map container.
-        """
-        crosshair_style = """
-        <style>
-        .jupyter-widgets.widget-container.widget-box.widget-vbox .jupyter-widgets.widget-container.widget-box.widget-vbox {
-            cursor: default !important;
-        }
-        .leaflet-container {
-            cursor: crosshair !important;
-        }
-        </style>
-        """
-        display(HTML(crosshair_style))
-
-    def AddAoiLayer(self) -> None:
-        """
-        Add AOI boundary layer (white outline, no fill) to the map.
-        """
-        try:
-            aoi_geojson = json.loads(self.aoi_gdf.to_json())
-            self.aoi_layer = GeoJSON(
-                data=aoi_geojson,
-                style={
-                    'color': 'white',
-                    'weight': 3,
-                    'fillColor': 'white',
-                    'fillOpacity': 0.0,
-                    'opacity': 1.0,
-                    'dashArray': '5, 5'
-                },
-                name="AOI Boundary"
-            )
-            self.map.add_layer(self.aoi_layer)
-            with self.output:
-                print("SUCCESS: AOI boundary layer added to map")
-        except Exception as e:
-            with self.output:
-                print(f"ERROR: Error adding AOI layer to map: {str(e)}")
-
-    def IsPointInAoi(self, lat: float, lon: float) -> bool:
-        """
-        Check whether a geographic point (lat, lon) is within the AOI boundary.
-        Returns True if no AOI is set (points allowed everywhere).
-        """
-        if self.aoi_geometry is None:
-            return True
-        point = Point(lon, lat)
-        return self.aoi_geometry.contains(point)
-
-    def HandleMapClick(self, **kwargs) -> None:
-        """
-        Handle click interactions from the ipyleaflet map.
-        Expects kwargs containing 'type' and 'coordinates' for click events.
-        """
-        if kwargs.get('type') == 'click':
-            if self.current_class is None:
-                with self.output:
-                    print("WARNING: Please select a class first!")
-                return
-
-            coords = kwargs.get('coordinates')
-            if coords:
-                lat, lon = coords
-
-                if not self.IsPointInAoi(lat, lon):
-                    with self.output:
-                        print(f"ERROR: Point at ({lat:.6f}, {lon:.6f}) is outside AOI boundary! Point rejected.")
-                    return
-
-                self.AddPointMarker(lat, lon)
-
-    def AddPointMarker(self, lat: float, lon: float) -> None:
-        """
-        Add a marker to the map for the currently selected class and store it in training data.
-        """
-        color = self.current_class.get('color', '#0000FF')
-
-        marker = self.CreateCustomMarker(lat, lon, color)
-        marker.draggable = self.edit_mode
-
-        marker_data = {
-            'latitude': lat,
-            'longitude': lon,
-            'class_id': self.current_class['id'],
-            'class_type': self.current_class['type'],
-            'color': color
-        }
-        self.marker_data_map[marker] = marker_data
-
-        def _HandleMove(event: Any) -> None:
-            if not self.edit_mode:
-                return
-
-            # traitlets observe passes change dict; ipyleaflet may pass (name, old, new) etc.
-            # Try to get new coordinates robustly
-            new_lat, new_lon = None, None
+        def create_sampling_interface(self):
+            """Create sampling interface."""
             try:
-                # If event is a dict from traitlets
-                if isinstance(event, dict) and 'new' in event:
-                    new_lat, new_lon = event['new']
-                elif hasattr(event, 'new'):
-                    new_lat, new_lon = event.new
-                else:
-                    new_lat, new_lon = marker.location
-            except Exception:
-                new_lat, new_lon = marker.location
-
-            old_lat = self.marker_data_map[marker]['latitude']
-            old_lon = self.marker_data_map[marker]['longitude']
-
-            if not self.IsPointInAoi(new_lat, new_lon):
-                with self.output:
-                    print(f"ERROR: Cannot move point to ({new_lat:.6f}, {new_lon:.6f}) - outside AOI boundary!")
-                marker.location = (old_lat, old_lon)
-                return
-
-            # Update internal state
-            self.marker_data_map[marker]['latitude'] = new_lat
-            self.marker_data_map[marker]['longitude'] = new_lon
-
-            for i, point in enumerate(self.training_data):
-                if (point['latitude'] == old_lat and point['longitude'] == old_lon and
-                        point['class_id'] == self.current_class['id']):
-                    self.training_data[i]['latitude'] = new_lat
-                    self.training_data[i]['longitude'] = new_lon
-                    break
-
-            with self.output:
-                print(f"SUCCESS: Point moved from ({old_lat:.6f}, {old_lon:.6f}) to ({new_lat:.6f}, {new_lon:.6f})")
-
-            self.UpdateTrainDataSampling()
-            self.UpdateTableDisplay()
-
-        marker.observe(_HandleMove, names=['location'])
-
-        def _HandleClick(**ev_kwargs: Any) -> None:
-            current_time = time.time()
-            time_diff = current_time - self.last_click_time
-            if time_diff < 0.5 and self.edit_mode:
-                self.RemovePoint(marker)
-            self.last_click_time = current_time
-
-        marker.on_click(_HandleClick)
-
-        self.map.add_layer(marker)
-        self.markers.append(marker)
-        self.training_data.append(marker_data)
-
-        class_type = self.current_class['type']
-        self.point_counter[class_type] = self.point_counter.get(class_type, 0) + 1
-
-        with self.output:
-            print(f"SUCCESS: Point added at ({lat:.6f}, {lon:.6f}) for class: {class_type}")
-
-        self.UpdateStatistics()
-        self.UpdateTrainDataSampling()
-        self.UpdateTableDisplay()
-
-    def CreateCustomMarker(self, lat: float, lon: float, hex_color: str) -> Marker:
-        """
-        Create a custom DivIcon marker with exact hex color and return an ipyleaflet.Marker.
-        """
-        icon_html = f"""
-        <div style="
-            background-color: {hex_color};
-            width: 20px;
-            height: 20px;
-            border: 2px solid white;
-            border-radius: 50%;
-            box-shadow: 0 0 5px rgba(0,0,0,0.5);
-            cursor: pointer;
-        "></div>
-        """
-
-        marker = Marker(
-            location=(lat, lon),
-            draggable=self.edit_mode,
-            icon=DivIcon(
-                icon_size=(20, 20),
-                icon_anchor=(10, 10),
-                html=icon_html
-            )
-        )
-        return marker
-
-    def RemovePoint(self, marker: Marker) -> None:
-        """
-        Remove a specified marker from the map and from stored training data.
-        """
-        if marker in self.markers:
-            self.map.remove_layer(marker)
-            self.markers.remove(marker)
-
-            marker_data = self.marker_data_map.get(marker, {})
-            lat = marker_data.get('latitude', 0)
-            lon = marker_data.get('longitude', 0)
-            class_type = marker_data.get('class_type', 'Unknown')
-
-            self.training_data = [
-                point for point in self.training_data
-                if not (point['latitude'] == lat and point['longitude'] == lon and point['class_type'] == class_type)
-            ]
-
-            if marker in self.marker_data_map:
-                del self.marker_data_map[marker]
-
-            if class_type in self.point_counter:
-                self.point_counter[class_type] = max(0, self.point_counter[class_type] - 1)
-
-            with self.output:
-                print(f"SUCCESS: Point removed at ({lat:.6f}, {lon:.6f}) for class: {class_type}")
-
-            self.UpdateStatistics()
-            self.UpdateTrainDataSampling()
-            self.UpdateTableDisplay()
-
-    def ToggleEditMode(self, b: Optional[Any] = None) -> None:
-        """
-        Toggle edit mode on/off. In edit mode markers are draggable and double-click removes them.
-        """
-        self.edit_mode = not self.edit_mode
-
-        for marker in self.markers:
-            marker.draggable = self.edit_mode
-
-        if self.edit_mode:
-            self.edit_btn.button_style = 'warning'
-            self.edit_btn.description = 'Edit Mode: ON'
-            with self.output:
-                print("INFO: Edit Mode: ON - Double-click points to remove them, drag to reposition")
-        else:
-            self.edit_btn.button_style = ''
-            self.edit_btn.description = 'Edit Mode: OFF'
-            with self.output:
-                print("INFO: Edit Mode: OFF - Points are now locked")
-
-    def CreateUi(self) -> None:
-        """
-        Create the user interface widgets and prepare output areas.
-        """
-        # Use already detected column names
-
-        class_options = [(f"{row[self.id_col]}: {row[self.type_col]}", idx)
-                         for idx, row in self.lulc_df.iterrows()]
-
-        self.class_dropdown = Dropdown(
-            options=class_options,
-            description='Select Class:',
-            style={'description_width': 'initial'},
-            layout=widgets.Layout(width='300px')
-        )
-
-        self.class_info = Label(value="Select a class to start sampling")
-        aoi_status = "Loaded" if self.aoi_ee_featurecollection is not None else "Not provided"
-        self.aoi_info = Label(value=f"AOI Status: {aoi_status}")
-
-        self.update_class_btn = Button(
-            description='Set Active Class',
-            button_style='success',
-            layout=widgets.Layout(width='150px')
-        )
-        self.update_class_btn.on_click(self.OnClassSelect)
-
-        self.save_btn = Button(
-            description='Update Data',
-            button_style='primary',
-            layout=widgets.Layout(width='150px')
-        )
-        self.save_btn.on_click(self.SaveTrainingData)
-
-        self.clear_btn = Button(
-            description='Clear All Points',
-            button_style='danger',
-            layout=widgets.Layout(width='150px')
-        )
-        self.clear_btn.on_click(self.ClearData)
-
-        self.edit_btn = Button(
-            description='Edit Mode: OFF',
-            button_style='',
-            layout=widgets.Layout(width='150px')
-        )
-        self.edit_btn.on_click(self.ToggleEditMode)
-
-        self.export_btn = Button(
-            description='Export to Shapefile',
-            button_style='info',
-            layout=widgets.Layout(width='150px')
-        )
-        self.export_btn.on_click(self.ExportToShapefile)
-
-        self.output = Output()
-        self.stats_output = Output()
-        self.table_output = Output()
-
-    def OnClassSelect(self, b: Optional[Any] = None) -> None:
-        """
-        Handle class selection from dropdown and set the active class.
-        """
-        if self.class_dropdown.value is None:
-            with self.output:
-                print("WARNING: Please select a class from the dropdown!")
-            return
-
-        idx = self.class_dropdown.value
-        row = self.lulc_df.iloc[idx]
-
-        self.current_class = {
-            'id': row[self.id_col],
-            'type': row[self.type_col],
-            'color': row[self.color_col]
-        }
-        self.class_info.value = f"Active Class: {row[self.id_col]} - {row[self.type_col]} (Color: {row[self.color_col]})"
-
-        with self.output:
-            print(f"SUCCESS: Active class set to: {row[self.type_col]}")
-
-    def SaveTrainingData(self, b: Optional[Any] = None) -> None:
-        """
-        Update TrainDataSampling variable with current training data and display info.
-        """
-        if not self.training_data:
-            with self.output:
-                print("WARNING: No training data to save!")
-            return
-
-        self.UpdateTrainDataSampling()
-
-        with self.output:
-            print("SUCCESS: Training data updated successfully!")
-            print(f"  - Total samples: {len(self.training_data)}")
-            print("  - Data stored in: tool.TrainDataSampling")
-
-        self.UpdateTableDisplay()
-
-    def UpdateTrainDataSampling(self) -> None:
-        """
-        Build/refresh the TrainDataSampling DataFrame that summarizes points per class.
-        """
-        summary_data: List[Dict[str, Any]] = []
-
-        if not self.training_data:
-            for idx, row in self.lulc_df.iterrows():
-                summary_data.append({
-                    'ID': int(row[self.id_col]),
-                    'LULC_Type': row[self.type_col],
-                    'Points': 0,
-                    'Coordinates': ''
-                })
-            self.TrainDataSampling = pd.DataFrame(summary_data)
-            return
-
-        df = pd.DataFrame(self.training_data)
-        all_classes = set(self.lulc_df[self.id_col])
-        sampled_classes = set(df['class_id'].unique())
-
-        for class_id in all_classes:
-            class_row = self.lulc_df[self.lulc_df[self.id_col] == class_id].iloc[0]
-            if class_id in sampled_classes:
-                group = df[df['class_id'] == class_id]
-                coords = list(zip(group['latitude'], group['longitude']))
-                coords_str = '; '.join([f"({lat:.6f}, {lon:.6f})" for lat, lon in coords])
-                summary_data.append({
-                    'ID': int(class_id),
-                    'LULC_Type': class_row[self.type_col],
-                    'Points': len(group),
-                    'Coordinates': coords_str
-                })
-            else:
-                summary_data.append({
-                    'ID': int(class_id),
-                    'LULC_Type': class_row[self.type_col],
-                    'Points': 0,
-                    'Coordinates': ''
-                })
-
-        self.TrainDataSampling = pd.DataFrame(summary_data).sort_values('ID')
-
-    def ClearData(self, b: Optional[Any] = None) -> None:
-        """
-        Clear all training data and remove markers from the map.
-        """
-        for marker in self.markers:
-            try:
-                self.map.remove_layer(marker)
-            except Exception:
-                pass
-
-        self.markers = []
-        self.training_data = []
-        self.marker_data_map = {}
-
-        for key in self.point_counter:
-            self.point_counter[key] = 0
-
-        self.edit_mode = False
-        self.edit_btn.button_style = ''
-        self.edit_btn.description = 'Edit Mode: OFF'
-
-        with self.output:
-            print("SUCCESS: All training data and markers cleared!")
-
-        self.UpdateTrainDataSampling()
-        self.UpdateStatistics()
-        self.UpdateTableDisplay()
-
-    def UpdateStatistics(self) -> None:
-        """
-        Show a simple statistics summary in the stats_output area.
-        """
-        with self.stats_output:
-            self.stats_output.clear_output()
-            if not self.training_data:
-                print("INFO: No samples collected yet.")
-                return
-
-            print("INFO: === Training Data Statistics ===")
-            print(f"Total points: {len(self.training_data)}")
-            # print("\nPoints per class:")
-            # for class_type, count in self.point_counter.items():
-            #     if count > 0:
-            #         print(f"  {class_type}: {count}")
-
-    def UpdateTableDisplay(self) -> None:
-        """
-        Display the TrainDataSampling DataFrame in a styled format in the table_output area.
-        """
-        with self.table_output:
-            self.table_output.clear_output(wait=True)
-
-            if self.TrainDataSampling.empty:
-                print("INFO: No data to display.")
-            else:
-                display_df = self.TrainDataSampling.copy()
-                styled_df = display_df.style.set_properties(**{
-                    'background-color': '#f8f9fa',
-                    'border': '1px solid #dee2e6',
-                    'padding': '8px',
-                    'text-align': 'left'
-                }).set_table_styles([{
-                    'selector': 'thead th',
-                    'props': [('background-color', '#007bff'),
-                             ('color', 'white'),
-                             ('font-weight', 'bold'),
-                             ('padding', '12px')]
-                }])
-
-                print("INFO: === Training Data Summary (TrainDataSampling) ===")
-                display(styled_df)
-
-    def ExportToShapefile(self, b: Optional[Any] = None):
-        """
-        Export current training data to a shapefile in the output/ directory.
-        Returns the GeoDataFrame if successful, otherwise None.
-        """
-        if not self.training_data:
-            with self.output:
-                print("WARNING: No training data to export!")
-            return None
-
-        try:
-            geometries = [Point(item['longitude'], item['latitude']) for item in self.training_data]
-            attributes_df = pd.DataFrame([
-                {
-                    'class_id': item['class_id'],
-                    'class_type': item['class_type'],
-                    'color': item['color']
-                } for item in self.training_data
-            ])
-
-            gdf = gpd.GeoDataFrame(
-                attributes_df,
-                geometry=geometries,
-                crs="EPSG:4326"
-            )
-
-            os.makedirs('output', exist_ok=True)
-            shapefile_path = 'output/training_data_points.shp'
-            gdf.to_file(shapefile_path, driver='ESRI Shapefile')
-
-            verified_gdf = gpd.read_file(shapefile_path)
-
-            with self.output:
-                print("SUCCESS: Training data exported to shapefile!")
-                print(f"  - File: {shapefile_path}")
-                print(f"  - Total features: {len(gdf)}")
-                print(f"  - CRS: {gdf.crs}")
-                print(f"  - Coordinate order: (longitude, latitude)")
-                try:
-                    bounds = verified_gdf.total_bounds
-                    print(f"  - Bounds: {bounds}")
-                except Exception:
-                    print("  - Bounds: unavailable")
-                print("\nShapefile components created:")
-                for ext in ['.shp', '.shx', '.dbf', '.prj', '.cpg']:
-                    file_path = f'output/training_data_points{ext}'
-                    if os.path.exists(file_path):
-                        print(f"  - {file_path}")
-
-            return gdf
-
-        except Exception as e:
-            with self.output:
-                print(f"ERROR: Error exporting to shapefile: {str(e)}")
-            return None
-
-    def Display(self) -> None:
-        """
-        Render the UI controls, the map, and the output areas in the notebook.
-        """
-        instructions = HTML(
-            """
-            <div style='background-color: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 10px;'>
-                <h3 style='margin-top: 0;'>LULC Point Sampling Tool</h3>
-                <ol>
-                    <li>Select a LULC class from the dropdown menu</li>
-                    <li>Click <b>'Set Active Class'</b> button</li>
-                    <li><b>Click on the map</b> to add points for the selected class</li>
-                    <li>Each class will have points in different colors</li>
-                    <li>Click <b>'Update Data'</b> to update the summary table</li>
-                    <li>Use <b>'Clear All Points'</b> to start over</li>
-                    <li>Toggle <b>'Edit Mode'</b> to remove points (double-click) or reposition (drag)</li>
-                    <li>Click <b>'Export to Shapefile'</b> to save as GIS vector data</li>
-                </ol>
-                <p><b>Note:</b> Hover over the map to activate crosshair cursor for precise point placement</p>
-                <p><b>AOI Restriction:</b> Points can only be placed within the AOI boundary (white outline)</p>
-            </div>
-            """
-        )
-
-        controls_top = VBox([
-            instructions,
-            Label(value="=== Class Selection ==="),
-            self.class_dropdown,
-            self.update_class_btn,
-            self.class_info,
-            self.aoi_info,
-            Label(value=""),
-            HBox([self.save_btn, self.clear_btn, self.edit_btn, self.export_btn]),
-            self.stats_output,
-            self.table_output
-        ])
-
-        display(controls_top)
-        display(self.map)
-        display(self.output)
-
-        self.UpdateTrainDataSampling()
-        self.UpdateTableDisplay()
+                from .interactive_sampling import create_integrated_sampling_interface
+                return create_integrated_sampling_interface()
+            except ImportError:
+                st.error("Interactive sampling functionality not available")
+                return False, None
+
+except ImportError as e:
+    logger.warning(f"Some legacy functionality not available: {str(e)}")
+    
+    # Create placeholder classes if imports fail
+    class InputCheck:
+        @staticmethod
+        def check_prerequisites():
+            return False
+    
+    class SyncTrainData:
+        @staticmethod
+        def LoadTrainData(*args, **kwargs):
+            raise NotImplementedError("Legacy SyncTrainData not available")
+        
+        @staticmethod
+        def SetClassField(*args, **kwargs):
+            raise NotImplementedError("Legacy SyncTrainData not available")
+        
+        @staticmethod
+        def ValidClass(*args, **kwargs):
+            raise NotImplementedError("Legacy SyncTrainData not available")
+        
+        @staticmethod
+        def CheckSufficiency(*args, **kwargs):
+            raise NotImplementedError("Legacy SyncTrainData not available")
+        
+        @staticmethod
+        def FilterTrainAoi(*args, **kwargs):
+            raise NotImplementedError("Legacy SyncTrainData not available")
+        
+        @staticmethod
+        def TrainDataRaw(*args, **kwargs):
+            raise NotImplementedError("Legacy SyncTrainData not available")
+    
+    class SplitTrainData:
+        @staticmethod
+        def SplitProcess(data, TrainSplitPct=0.7, random_state=123):
+            return create_legacy_compatible_split(data, TrainSplitPct, random_state)
+    
+    class LULCSamplingTool:
+        def __init__(self, lulc_table):
+            self.lulc_table = lulc_table
