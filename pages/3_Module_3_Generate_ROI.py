@@ -13,6 +13,7 @@ import math
 from shapely.geometry import shape, Point, Polygon, mapping
 from epistemx.module_3 import InputCheck, SyncTrainData, LULCSamplingTool
 from epistemx.ee_config import initialize_earth_engine
+from modules.nav import Navbar
 
 # Initialize Earth Engine
 initialize_earth_engine()
@@ -63,11 +64,8 @@ markdown = """
 Modul ini dibuat untuk menentukan data sampel training.
 """
 
-# Set page layout and side info
-st.sidebar.title("About")
-st.sidebar.info(markdown)
-logo = "logos/logo_epistem.png"
-st.sidebar.image(logo)
+# Add navigation sidebar
+Navbar()
 
 st.markdown("Ketersediaan keluaran hasil modul 1 dan 2")
 col1, col2, col3 = st.columns(3)

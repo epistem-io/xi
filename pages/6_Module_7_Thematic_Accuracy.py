@@ -1,6 +1,7 @@
 import streamlit as st
 from epistemx.shapefile_utils import shapefile_validator, EE_converter
 from epistemx.module_7 import Thematic_Accuracy_Assessment
+from modules.nav import Navbar
 import pandas as pd
 import geemap.foliumap as geemap
 import tempfile
@@ -37,6 +38,9 @@ def get_accuracy_manager():
     return Thematic_Accuracy_Assessment()
 
 manager = get_accuracy_manager()
+
+# Add navigation sidebar
+Navbar()
 
 # Page header
 st.title("Penilaian Akurasi Tematik")
@@ -89,7 +93,7 @@ def process_shapefile_upload(uploaded_file):
                         shp_files.append(os.path.join(root, fname))
 
             if not shp_files:
-                return False, "No .shp file found in the uploaded zip.", None, None
+                return False, "Berkas .shp tidak ditemukan dalam zip yang diunggah.", None, None
 
             # Read and process shapefile
             gdf = gpd.read_file(shp_files[0])
@@ -101,18 +105,18 @@ def process_shapefile_upload(uploaded_file):
             gdf_cleaned = validator.validate_and_fix_geometry(gdf, geometry="mixed")
             
             if gdf_cleaned is None:
-                return False, "Geometry validation failed", None, None
+                return False, "Validasi geometri gagal", None, None
             
             # Convert to Earth Engine format using helper module
             ee_data = converter.convert_roi_gdf(gdf_cleaned)
             
             if ee_data is None:
-                return False, "Failed to convert to Google Earth Engine format", None, None
+                return False, "Gagal mengkonversi ke format Google Earth Engine", None, None
             
-            return True, "Validation data processed successfully", ee_data, gdf_cleaned
+            return True, "Data validasi berhasil diproses", ee_data, gdf_cleaned
             
     except Exception as e:
-        return False, f"Error processing shapefile: {str(e)}", None, None
+        return False, f"Kesalahan memproses shapefile: {str(e)}", None, None
 
 #similar to module 1 but wrap in function
 def render_validation_upload():

@@ -13,6 +13,7 @@ Architecture:
 import streamlit as st
 import pandas as pd
 from epistemx.module_2 import LULC_Scheme_Manager
+from modules.nav import Navbar
 
 #Page configuration
 st.set_page_config(
@@ -76,6 +77,9 @@ def sync_session_from_manager():
 
 # Sync manager with current session state
 sync_manager_from_session()
+
+# Add navigation sidebar
+Navbar()
 
 # Page header
 st.title("Determining LULC Classification Schema and Classes")

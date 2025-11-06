@@ -10,6 +10,7 @@ gatherUsageStats = false
 
 [client]
 showErrorDetails = true
+showSidebarNavigation = false
 
 [theme]
 primaryColor = "#EC1776"

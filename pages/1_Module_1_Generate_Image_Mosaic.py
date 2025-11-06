@@ -13,6 +13,7 @@ import geemap.foliumap as geemap
 import geopandas as gpd
 from epistemx.module_1 import Reflectance_Data, Reflectance_Stats
 from epistemx.shapefile_utils import shapefile_validator, EE_converter
+from modules.nav import Navbar
 import tempfile
 import zipfile
 import os
@@ -46,11 +47,8 @@ st.divider()
 markdown = """
 Modul ini memungkinkan pengguna untuk mencari dan menghasilkan gabungan citra satelit untuk area minat dan rentang waktu yang anda tentukan, menggunakan data katalog Google Earth Engine (GEE).
 """
-#set page layout and side info
-st.sidebar.title("Tentang Wahana")
-st.sidebar.info(markdown)
-logo = "logos/logo_epistem.png"
-st.sidebar.image(logo)
+# Add navigation sidebar
+Navbar()
 #Initialize session state for storing collection, composite, aoi, AOI that has been converted to gdf, and export task
 #similar to a python dict, we fill it later
 if 'collection' not in st.session_state:

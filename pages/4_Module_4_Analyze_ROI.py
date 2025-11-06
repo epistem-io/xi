@@ -13,6 +13,7 @@ import streamlit as st
 from epistemx.shapefile_utils import shapefile_validator, EE_converter
 from epistemx.module_4 import sample_quality
 from epistemx.module_4_part2 import spectral_plotter
+from modules.nav import Navbar
 import matplotlib.pyplot as plt
 import numpy as np
 import geemap.foliumap as geemap
@@ -51,15 +52,8 @@ pengguna dapat melakukan analisis keterpisahan dengan langkah-langkah berikut:""
 st.markdown("1. Pilih attibute data latih, yaitu ID dan nama kelas")
 st.markdown("2. Pilih parameter keterpisahan yang terdiri dari resolusi spasial dan jumlah maksimum piksel untuk setiap kelas. Platform ini menggunakan metode Transformed Divergence (TD) untuk melakukan analisis keterpisahan")
 
-#set page layout and side info
-st.sidebar.title("Tentang Modul ini")
-markdown = """
-Modul ini dirancang untuk melakukan analisis keterpisahan antar 
-kelas tutupan/penggunaan lahan berdasarkan data latih yang telah disiapkan di modul 3.
-"""
-st.sidebar.info(markdown)
-logo = "logos/logo_epistem.png"
-st.sidebar.image(logo)
+# Add navigation sidebar
+Navbar()
 
 st.markdown("Ketersedian gabungan citra satelit dari modul 1")
 #Check if landsat data from module 1 is available

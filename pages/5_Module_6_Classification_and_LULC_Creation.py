@@ -14,6 +14,7 @@ import pandas as pd
 import plotly.express as px
 import geemap.foliumap as geemap
 from epistemx.module_6_phase1 import FeatureExtraction, Generate_LULC
+from modules.nav import Navbar
 import numpy as np
 import traceback
 import ee
@@ -48,11 +49,8 @@ Untuk menggunakan modul ini, Anda harus menyelesaikan Modul 1 hingga 4.
 Modul 1 menghasilkan gabungan citra, Modul 2 mendefinisikan skema kelas, Modul 3 membuat data latihan (Area Sampel), dan Modul 4 menganalisis kualitas data latihan.
 """)
 
-#Sidebar info
-st.sidebar.title("Tentang")
-st.sidebar.info("Modul untuk menghasilkan peta klasifikasi berdasarkan Statistical Machine Intelligence and Learning (SMILE) Random Forest classifier")
-logo = "logos/logo_epistem.png"
-st.sidebar.image(logo)
+# Add navigation sidebar
+Navbar()
 
 #Check prerequisites from previous modules. The module cannot open if the previous modules is not complete.
 #add module 2 check and module 3 (for training data not analysis)

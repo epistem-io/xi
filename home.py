@@ -1,6 +1,7 @@
 import streamlit as st
 import leafmap.foliumap as leafmap
 from epistemx import auto_initialize
+from modules.nav import Navbar
 import os
 import tempfile
 
@@ -36,16 +37,8 @@ if 'ee_initialized' not in st.session_state:
         st.error(f"Earth Engine initialization error: {e}")
         st.session_state.ee_initialized = False
 
-# Customize the sidebar
-markdown = """
-Contoh kerja modul 1 dan 3 dari platform pemetaan tutupan lahan Epistem. Diadaptasi dari:
-<https://github.com/opengeos/streamlit-map-template>
-"""
-
-st.sidebar.title("Tentang")
-st.sidebar.info(markdown)
-logo = "logos/logo_epistem.png"
-st.sidebar.image(logo)
+# Add navigation sidebar
+Navbar()
 
 # Customize page title with branded header
 st.markdown("""
