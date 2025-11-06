@@ -18,27 +18,6 @@ from shapely.geometry import shape
 # Configure logging
 logger = logging.getLogger(__name__)
 
-# Import existing functionality for direct use
-from .data_integration import (
-    detect_insufficient_samples, 
-    combine_training_sources,
-    standardize_training_data
-)
-from .final_dataset_preparation import (
-    prepare_final_training_dataset,
-    create_sample_distribution_table,
-    validate_dataset_consistency,
-    generate_dataset_statistics
-)
-from .enhanced_data_splitting import (
-    split_combined_training_data,
-    create_legacy_compatible_split,
-    analyze_split_quality
-)
-from .backward_compatibility import (
-    ensure_module3_backward_compatibility,
-    cleanup_temporary_session_state
-)
 
 # Legacy imports for backward compatibility
 try:
@@ -415,12 +394,22 @@ try:
                 if train_data is None or train_data.empty:
                     return gpd.GeoDataFrame(), gpd.GeoDataFrame()
                 
-                # Use enhanced splitter as fallback
-                return create_legacy_compatible_split(
-                    combined_data=train_data,
-                    train_ratio=TrainSplitPct,
-                    random_state=random_state
-                )
+                # Simple train/validation split
+                from sklearn.model_selection import train_test_split
+                
+                if hasattr(train_data, 'index'):
+                    # For GeoDataFrames, split by index to maintain spatial relationships
+                    train_indices, val_indices = train_test_split(
+                        train_data.index, 
+                        train_size=TrainSplitPct, 
+                        random_state=random_state,
+                        stratify=train_data.get('kelas', None) if 'kelas' in train_data.columns else None
+                    )
+                    train_split = train_data.loc[train_indices].copy()
+                    val_split = train_data.loc[val_indices].copy()
+                    return train_split, val_split
+                else:
+                    return gpd.GeoDataFrame(), gpd.GeoDataFrame()
                 
             except Exception as e:
                 logger.error(f"Error splitting training data: {str(e)}")
@@ -478,7 +467,25 @@ except ImportError as e:
     class SplitTrainData:
         @staticmethod
         def SplitProcess(data, TrainSplitPct=0.7, random_state=123):
-            return create_legacy_compatible_split(data, TrainSplitPct, random_state)
+            """Simple fallback split functionality."""
+            try:
+                if data is None or data.empty:
+                    return gpd.GeoDataFrame(), gpd.GeoDataFrame()
+                
+                from sklearn.model_selection import train_test_split
+                
+                # Simple train/validation split
+                train_indices, val_indices = train_test_split(
+                    data.index, 
+                    train_size=TrainSplitPct, 
+                    random_state=random_state
+                )
+                train_split = data.loc[train_indices].copy()
+                val_split = data.loc[val_indices].copy()
+                return train_split, val_split
+            except Exception as e:
+                logger.error(f"Error in fallback split: {str(e)}")
+                return gpd.GeoDataFrame(), gpd.GeoDataFrame()
     
     class LULCSamplingTool:
         def __init__(self, lulc_table):
