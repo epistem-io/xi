@@ -49,13 +49,13 @@ st.markdown("""Modul ini memungkinkan pengguna melakukan analisis keterpisahan a
 Sebelum melakukan analisis, pengguna harus mengunggah data referensi tiap-tiap kelas tutupan/penggunaan lahan yang sudah ditentukan dalam format yang kompatibel. 
 Data ini harus memuat ID kelas unik dan nama kelas yang sesuai. Setelah data referensi diunggah, 
 pengguna dapat melakukan analisis keterpisahan dengan langkah-langkah berikut:""")
-st.markdown("1. Pilih attibute data latih, yaitu ID dan nama kelas")
+st.markdown("1. Pilih atribut data latih, yaitu ID dan nama kelas")
 st.markdown("2. Pilih parameter keterpisahan yang terdiri dari resolusi spasial dan jumlah maksimum piksel untuk setiap kelas. Platform ini menggunakan metode Transformed Divergence (TD) untuk melakukan analisis keterpisahan")
 
 # Add navigation sidebar
 Navbar()
 
-st.markdown("Ketersedian gabungan citra satelit dari modul 1")
+st.markdown("Ketersediaan gabungan citra satelit dari modul 1")
 #Check if landsat data from module 1 is available
 if 'composite' in st.session_state:
     st.success("Gabungan citra satelit tersedia!")
@@ -84,9 +84,9 @@ else:
     st.stop()
 st.divider()
 #User input ROI upload
-st.subheader("A. Unggah Wilayah Minat (Shapefile)")
+st.subheader("A. Unggah Wilayah Kajian (Shapefile)")
 st.markdown("saat ini platform hanya mendukung shapefile dalam format .zip")
-uploaded_file = st.file_uploader("Unggah area minat dalam berkas zip (.zip)", type=["zip"])
+uploaded_file = st.file_uploader("Unggah wilayah kajian dalam berkas zip (.zip)", type=["zip"])
 aoi = None
 #define AOI upload function
 if uploaded_file:
@@ -108,15 +108,15 @@ if uploaded_file:
                     shp_files.append(os.path.join(root, fname))
 
         if len(shp_files) == 0:
-            st.error("No .shp file found in the uploaded zip.")
+            st.error("Shapefile tidak ditemukan dalam berkas zip yang diunggah.")
         else:
             try:
                 # Read the shapefile
                 gdf = gpd.read_file(shp_files[0])
-                st.success("ROI loaded successfully!")
+                st.success("Area Sampel berhasil dimuat!")
                 validate = shapefile_validator(verbose=False)
                 converter = EE_converter(verbose=False)
-                st.markdown("ROI table preview:")
+                st.markdown("Pratinjau Tabel Area Sampel:")
                 st.write(gdf)
                 # Validate and fix geometry
                 gdf_cleaned = validate.validate_and_fix_geometry(gdf, geometry="mixed")
@@ -126,31 +126,31 @@ if uploaded_file:
                     aoi = converter.convert_roi_gdf(gdf_cleaned)
                     
                     if aoi is not None:
-                        st.success("ROI conversion completed!")
+                        st.success("Data latih berhasil diproses!")
                         # Show a small preview map centered on AOI
                         # Store in session state
                         st.session_state['training_data'] = aoi
                         st.session_state['training_gdf'] = gdf_cleaned
-                        st.text("Region of Interest distribution:")
+                        st.text("Sebaran data latih:")
                         centroid = gdf_cleaned.geometry.centroid.iloc[0]
                         preview_map = geemap.Map(center=[centroid.y, centroid.x], zoom=6)
                         preview_map.add_geojson(gdf_cleaned.__geo_interface__, layer_name="AOI")
                         preview_map.to_streamlit(height=600)
                     else:
-                        st.error("Failed to convert ROI to Google Earth Engine format")
+                        st.error("Gagal mengubah data latih ke format Google Earth Engine.")
                 else:
-                    st.error("Geometry validation failed")
+                    st.error("Validasi geometri data latih gagal.")
                     
             except Exception as e:
-                st.error(f"Error reading shapefile: {e}")
-                st.info("Make sure your shapefile includes all necessary files (.shp, .shx, .dbf, .prj)")
+                st.error(f"Terjadi kesalahan dalam membaca berkas shapefile: {e}")
+                st.info("Pastikan Shapefile Anda memuat semua berkas yang diperlukan (.shp, .shx, .dbf, .prj).")
 st.divider()
 #Training data separability analysis
 #Used the previously uploaded ROI
 if "training_gdf" in st.session_state:
     gdf_cleaned = st.session_state["training_gdf"]
-    st.subheader("B. Lakukan Analisis Keterpisahan Sampel")
-    st.markdown("Pilih kolom yang sesuai dari Area Sampel Anda yang merujuk pada ID Kelas numerik dan Nama Kelas.")   
+    st.subheader("B. Lakukan Analisis Keterpisahan Sampel Data Latih")
+    st.markdown("Pilih kolom yang sesuai dari data latih Anda yang merujuk pada ID Kelas numerik dan Nama Kelas.")   
     
     #Dropdown for class_property (numeric IDs)
     class_property = st.selectbox(
@@ -161,7 +161,7 @@ if "training_gdf" in st.session_state:
     )
     #Dropdown for class_name_property (class names)
     class_name_property = st.selectbox(
-        "Pilih kolom tabel atribute yang berisi nama kelas (contoh: Hutan, Badan Air, Permukiman, dll):",
+        "Pilih kolom tabel atribut yang berisi nama kelas (contoh: Hutan, Badan Air, Permukiman, dll):",
         options=gdf_cleaned.columns.tolist(),
         index=gdf_cleaned.columns.get_loc("CLASS_NAME") if "CLASS_NAME" in gdf_cleaned.columns else 0,
         key="class_name_property"
@@ -175,21 +175,21 @@ if "training_gdf" in st.session_state:
     #Hardcode method to Transformed Divergence
     method = "TD"
     #Add information for separability approach
-    st.info("Metode Analisis Keterpisahan: Transformed Divergence (TD)")
+    st.info("Metode Analisis Keterpisahan: *Transformed Divergence* (TD)")
     st.markdown("""
-    Metode ini mengukur keterpisahan statisk antara kelas penutup lahan melalui analisis perbedaan nilai rata - rata (mean) dan struktur kovarian. 
+    Metode ini mengukur keterpisahan statisk antara kelas tutupan lahan melalui analisis perbedaan nilai rata-rata dan struktur kovarian. 
     Nilai TD memiliki rentang 0 - 2, dimana nilai yang lebih tinggi mengacu kepada keterpisahan yang lebih baik.
     """)
     #user input (scale and max pixels). Note user did not have a lot to do, just make it default
     scale = st.number_input("Resolusi Spasial:", min_value=10, max_value=1000, value=30, step=10, 
-                            help="Higher values = lower resolution but faster processing")
-    max_pixels = st.number_input("Maximum pixels per class:", min_value=1000, max_value=10000, value=5000, step=500,
-                                help="Lower values = faster processing but less representative sampling")
+                            help="Nilai lebih tinggi = resolusi lebih rendah tetapi waktu pemrosesan lebih cepat")
+    max_pixels = st.number_input("Jumlah piksel maksimum per kelas:", min_value=1000, max_value=10000, value=5000, step=500,
+                                help="Nilai lebih rendah = waktu pemrosesan lebih cepat dengan risiko sampel kurang representatif")
 
     #Single command to complete the analysis
     if st.button("Jalankan Analisis Keterpisahan", type="primary", use_container_width=True):
         if "training_data" not in st.session_state:
-            st.error("Mohon unggah Shapefile Area Sampel yang valid terlebih dahulu.")
+            st.error("Mohon unggah Shapefile data latih yang benar terlebih dahulu.")
         else:
             try:
                 #get the properties 
@@ -218,39 +218,39 @@ if "training_gdf" in st.session_state:
                 progress.progress(40)
 
                 #Extract spectral values
-                status_text.text("Langkah 3/5: Mengekstraks nilai spektral dari berbagai band… Proses ini memakan waktu beberapa menit.")
+                status_text.text("Langkah 3/5: Mengekstrak nilai spektral dari berbagai kanal/band… Proses ini memakan waktu beberapa menit.")
                 try:
-                    print(f"Debug: About to extract spectral values with scale={scale}, max_pixels={max_pixels}")
-                    print(f"Debug: Analyzer class_property={analyzer.class_property}")
-                    print(f"Debug: Analyzer class_name_property={analyzer.class_name_property}")
+                    print(f"Debug: Akan mengekstrak nilai spektral dengan resolusi ={scale}, man jumlah maksimum piksel ={max_pixels}")
+                    print(f"Debug: Properti kelas (class_property) yang digunakan ={analyzer.class_property}")
+                    print(f"Properti nama kelas (class_name_property) yang digunakan ={analyzer.class_name_property}")
                         
                     pixel_extract = analyzer.extract_spectral_values(scale=scale, max_pixels_per_class=max_pixels)
                         
                     if pixel_extract.empty:
-                            st.error("No spectral data was extracted. Please check your training data and image overlap.")
+                            st.error("Tidak ada data spektral yang berhasil diekstrak. Periksa kembali apakah data latih Anda berada di dalam wilayah kajian (AOI).")
                             st.stop()
                         
-                    print(f"Debug: Successfully extracted {len(pixel_extract)} pixels")
+                    print(f"Debug: Berhasil mengekstrak {len(pixel_extract)} piksel")
                     st.session_state["pixel_extract"] = pixel_extract
                     progress.progress(60)
                         
                 except Exception as extract_error:
-                        print(f"Debug: Extract error details: {extract_error}")
-                        print(f"Debug: Extract error type: {type(extract_error)}")
+                        print(f"Debug: Rincian kesalahan ekstraksi {extract_error}")
+                        print(f"Debug: Jenis kesalahan ekstraksi {type(extract_error)}")
                         traceback.print_exc()
                         raise extract_error
 
                 #Compute pixel statistics
                 status_text.text("Langkah 4/5: Menghitung statistik piksel...")
                 try:
-                    print("Debug: About to compute pixel statistics")
+                    print("Debug: Sedang memulai perhitungan statistik piksel")
                     pixel_stats_df = analyzer.get_sample_pixel_stats_df(pixel_extract)
-                    print(f"Debug: Pixel stats computed successfully, shape: {pixel_stats_df.shape}")
+                    print(f"Debug: perhitungan statistik piksel berhasil, bentuk: {pixel_stats_df.shape}")
                     st.session_state["pixel_stats"] = pixel_stats_df
                     progress.progress(80)
                         
                 except Exception as stats_error:
-                    print(f"Debug: Pixel stats error: {stats_error}")
+                    print(f"Debug: Error perhitungan statistik piksel: {stats_error}")
                     traceback.print_exc()
                     raise stats_error
                 #Run separability analysis
@@ -267,15 +267,15 @@ if "training_gdf" in st.session_state:
                 progress.progress(100)
                 st.success("Analisis Selesai!")
             except Exception as e:
-                st.error(f"Error during analysis: {str(e)}")
-                st.write("Mohon periksa kembali Area Sampel dan parameter analisis Anda, lalu coba lagi.")
+                st.error(f"Terjadi kesalahan saat analisis: {str(e)}")
+                st.write("Mohon periksa kembali data latih dan parameter analisis Anda, lalu coba lagi.")
     #display the result
 if st.session_state.get("analysis_complete", False):
     st.divider()
     st.subheader("C. Hasil Analisis")
     st.markdown("""
     Analisis keterpisahan menghasilkan beberapa tabel:
-    - **Statistik Area Minat:** 
+    - **Statistik Wilayah Kajian:** 
     - **Statistik Dasar Piksel:**
     - **Ringkasan Keterpisahan:**
     - **Keterpisahan Setiap Pasangan Kelas**
@@ -317,32 +317,32 @@ if st.session_state.get("analysis_complete", False):
             
             # Add detailed interpretation guide
             st.markdown("---")
-            st.markdown("**Interpretasi Nilai Transformed Divergence (TD):**")
+            st.markdown("**Interpretasi Nilai Indeks Keterpisahan TD (*Transformed Divergence*):**")
             st.markdown("""
-            - **TD ≥ 1.8**: 🟢 **Good Separability** - Kelas - Kelas dapat dipisahkan secara spektral dan kemungkinan dapat diklasifikasikan secara akurat
-            - **1.0 ≤ TD < 1.8**: 🟡 **Weak/Marginal Separability** - Terdapat tumpang tindih yang dapat menyebabkan kesalahan klasifikasi antara kedua kelas
-            - **TD < 1.0**: 🔴 **Poort Separability** - Terdapat tumpang tindih signifikan, terdapat risiko tinggi kesalahan klasifikasi dan bahkan tidak terpisahkan sama sekali
+            - **TD ≥ 1.8**: 🟢 **Good Separability** - Kelas - Kelas dapat dipisahkan secara spektral dan kemungkinan dapat diklasifikasikan dengan akurat
+            - **1.0 ≤ TD < 1.8**: 🟡 **Weak/Marginal Separability** - Terdapat tumpang tindih yang berpotensi menyebabkan kesalahan klasifikasi antara kedua kelas
+            - **TD < 1.0**: 🔴 **Poor Separability** - Terdapat tumpang tindih signifikan, potensi kesalahan klasifikasi tinggi atau bahkan tidak terpisahkan sama sekali.
             """)
             
         else:
             st.write("Ringkasan analisis keterpisahan data tidak tersedia.")           
     # Detailed Separability Results
-    with st.expander("Detailed Separability Results", expanded=False):
+    with st.expander("Rincian analisis keterpisahan", expanded=False):
         if "separability_results" in st.session_state:
             st.dataframe(st.session_state["separability_results"], use_container_width=True)
         else:
-            st.write("No detailed separability results available")
+            st.write("Tidak ada hasil analisis keterpisahan terperinci yang tersedia")
     # Most Problematic Class Pairs
-    with st.expander("Most Problematic Class Pairs", expanded=True):
+    with st.expander("Pasangan Kelas dengan Keterpisahan Terendah", expanded=True):
         if "lowest_separability" in st.session_state:
             st.markdown("*Pasangan kelas ini memiliki tingkat pemisahan data terendah dan dapat menyebabkan kerancuan klasifikasi:*")
             st.dataframe(st.session_state["lowest_separability"], use_container_width=True)
         else:
-            st.write("No problematic pairs data available")            
+            st.write("Tidak ada data pasangan kelas yang rancu.")            
 
 st.divider()
-st.subheader("D. Plot the Region of Interest")
-st.markdown("You can visualize the ROI using several plots, namely histogram, box plot, and scatter plot. This allows the user to assess the overlap between classes, which might led to difficulties in separating them")
+st.subheader("D. Visualisasi keterpisahan antar kelas dalam data latih")
+st.markdown("Anda dapat menampilkan keterpisahan antar kelas dalam data latih menggunakan beberapa plot, yaitu histogram, plot kotak (*box plot*), dan plot sebar (*scatter plot*). Ini memungkinkan pengguna untuk mengevaluasi sebaran tumpang tindih data antar kelas, yang berpotensi mengurangi akurasi proses klasifikasi di langkah selanjutnya.")
 if (st.session_state.get("analysis_complete", False) and 
     "pixel_extract" in st.session_state and
     "analyzer" in st.session_state and
@@ -355,37 +355,37 @@ if (st.session_state.get("analysis_complete", False) and
         #verification
         available_bands = [b for b in plotter.band_names if b in pixel_data.columns]
         if not available_bands:
-            st.error("No valid spectral bands found in the extracted pixel data.")
+            st.error("Tidak ada kanal/band spektral yang ditemukan dalam piksel yang diekstrak.")
             st.stop()
         #Tabs for different visualization
         viz1, viz2, viz3, viz4 = st.tabs([
-            "Histograms",
-            "Box Plots",
+            "Histogram",
+            "Box Plot",
             "Scatter Plot",
             "3D Scatter Plot"
         ])
         #Tab 1: Facet Histograms
         with viz1:
-            st.markdown("### Distribution of Spectral Values by Class")
-            st.markdown("Interactive histograms showing all classes overlaid for easy comparison. " \
-                       "Click legend items to show/hide specific classes.")
+            st.markdown("### Distribusi Nilai Spektral per Kelas")
+            st.markdown("Histogram interaktif yang menampilkan semua kelas untuk perbandingan mudah. " \
+                       "Klik item legenda untuk menampilkan/menyembunyikan kelas tertentu.")
             
             col1, col2, col3 = st.columns([2, 1, 1])
             with col1:
                 selected_hist_bands = st.multiselect(
-                    "Select bands to plot:",
+                    "Pilih kanal/band untuk diplot:",
                     options=available_bands,
                     default=available_bands[:3] if len(available_bands) >= 3 else available_bands,
                     key="hist_bands"
                 )
             with col2:
-                bins = st.slider("Number of bins:", min_value=10, max_value=50, value=30, step=5)
+                bins = st.slider("Jumlah bin:", min_value=10, max_value=50, value=30, step=5)
             with col3:
-                hist_opacity = st.slider("Opacity:", 0.3, 0.9, 0.6, 0.1, key="hist_opacity")
+                hist_opacity = st.slider("Opasitas:", 0.3, 0.9, 0.6, 0.1, key="hist_opacity")
             
-            if st.button("Generate Histograms", key="btn_histogram", type="primary"):
+            if st.button("Buat Histogram", key="btn_histogram", type="primary"):
                 if selected_hist_bands:
-                    with st.spinner("Generating interactive histograms..."):
+                    with st.spinner("Membuat histogram interaktif..."):
                         try:
                             figures = plotter.plot_histogram(
                                 pixel_data, 
@@ -395,29 +395,29 @@ if (st.session_state.get("analysis_complete", False) and
                             )
                             for fig in figures:
                                 st.plotly_chart(fig,width='stretch')
-                            st.success("✅ Histograms generated!")
-                            st.info("💡 **Tip:** Click on legend items to show/hide classes.")
+                            st.success("✅ Histogram berhasil dibuat!")
+                            st.info("💡 **Tips:** Klik item legenda untuk menampilkan/menyembunyikan kelas.")
                         except Exception as e:
-                            st.error(f"Error generating histograms: {str(e)}")
+                            st.error(f"Terjadi kesalahan dalam menampilkan histogram: {str(e)}")
                 else:
-                    st.warning("Please select at least one band.")
+                    st.warning("Pilih setidaknya satu kanal/band.")
         
         #Tab 2: Box Plots
         with viz2:
-            st.markdown("### Box Plots - Spectral Value Distribution")
-            st.markdown("Interactive box plots showing median, quartiles, and outliers for each class. " \
-                       "Hover over boxes to see statistical details.")
+            st.markdown("### Plot Kotak - Distribusi Nilai Spektral")
+            st.markdown("Plot kotak interaktif yang menampilkan nilai spektral median, kuartil, dan pencilan untuk setiap kelas. " \
+                       "Arahkan kursor ke kotak untuk melihat rincian statistik.")
             
             selected_box_bands = st.multiselect(
-                "Select bands to plot:",
+                "Pilih kanal/band untuk ditampilkan:",
                 options=available_bands,
                 default=available_bands[:5] if len(available_bands) >= 5 else available_bands,
                 key="box_bands"
             )
             
-            if st.button("Generate Box Plots", key="btn_boxplot", type="primary"):
+            if st.button("Buat Plot Kotak", key="btn_boxplot", type="primary"):
                 if selected_box_bands:
-                    with st.spinner("Generating interactive box plots..."):
+                    with st.spinner("Membuat plot kotak interaktif..."):
                         try:
                             figures = plotter.plot_boxplot(
                                 pixel_data, 
@@ -425,17 +425,17 @@ if (st.session_state.get("analysis_complete", False) and
                             )
                             for fig in figures:
                                 st.plotly_chart(fig,width='stretch')
-                            st.success("✅ Box plots generated successfully!")
-                            st.info("💡 **Tip:** Hover over boxes to see min, max, median, and quartile values.")
+                            st.success("✅ Plot kotak berhasil dibuat!")
+                            st.info("💡 **Tips:** Arahkan kursor ke kotak untuk melihat nilai min, max, median, dan kuartil.")
                         except Exception as e:
-                            st.error(f"Error generating box plots: {str(e)}")
+                            st.error(f"Terjadi kesalahan dalam menampilkan plot kotak: {str(e)}")
                 else:
-                    st.warning("Please select at least one band.")
+                    st.warning("Pilih setidaknya satu kanal/band.")
         
         # TAB 3: SINGLE SCATTER PLOT
         with viz3:
-            st.markdown("### Feature Space Scatter Plot")
-            st.markdown("Visualize the relationship between two spectral bands and assess class separability in 2D feature space.")
+            st.markdown("### Plot sebar antar kanal/band")
+            st.markdown("Gunakan dua band spektral untuk menilai seberapa jelas perbedaan antar kelas pada ruang fitur dua dimensi.")
             
             available_bands = [b for b in plotter.band_names if b in pixel_data.columns]
             
@@ -444,7 +444,7 @@ if (st.session_state.get("analysis_complete", False) and
                 
                 with col1:
                     x_band = st.selectbox(
-                        "X-axis band:",
+                        "Band sumbu-X:",
                         options=available_bands,
                         index=0 if "RED" not in available_bands else available_bands.index("RED"),
                         key="scatter_x"
@@ -452,24 +452,24 @@ if (st.session_state.get("analysis_complete", False) and
                 
                 with col2:
                     y_band = st.selectbox(
-                        "Y-axis band:",
+                        "Band sumbu-Y:",
                         options=available_bands,
                         index=1 if "NIR" not in available_bands else available_bands.index("NIR"),
                         key="scatter_y"
                     )
                 
                 with col3:
-                    alpha = st.slider("Point transparency:", 0.1, 1.0, 0.6, 0.1)
+                    alpha = st.slider("Transparansi titik:", 0.1, 1.0, 0.6, 0.1)
                 
                 # Additional options
                 col4, col5 = st.columns(2)
                 with col4:
-                    add_ellipse = st.checkbox("Add confidence ellipses", value=False, 
-                                            help="Shows 2-sigma confidence ellipses for each class")
+                    add_ellipse = st.checkbox("Tampilkan rentang kepercayaan", value=False, 
+                                            help="Menampilkan elipsoid rentang kepercayaan (2-sigma) untuk setiap kelas")
                 with col5:
-                    color_palette = st.selectbox("Color palette:", 
+                    color_palette = st.selectbox("Palet warna:", 
                                                 ["tab10", "Set3", "Paired", "husl", "Accent"], 
-                                                index=0,  help="Preview will update when you change selection")
+                                                index=0,  help="Pratinjau akan diperbarui saat Anda mengubah pilihan")
                     colors = plt.cm.get_cmap(color_palette)(np.linspace(0, 1, 10))
                     color_boxes = ""
                     for i in range(10):
@@ -483,8 +483,8 @@ if (st.session_state.get("analysis_complete", False) and
                     
                     st.markdown(color_boxes, unsafe_allow_html=True)
                 
-                if st.button("Generate Scatter Plot", key="btn_scatter"):
-                    with st.spinner("Generating scatter plot..."):
+                if st.button("Buat plot sebar", key="btn_scatter"):
+                    with st.spinner("Membuat plot sebar..."):
                         try:
                             fig = plotter.static_scatter_plot(
                                 pixel_data,
@@ -498,32 +498,32 @@ if (st.session_state.get("analysis_complete", False) and
                             )
                             if fig:
                                 #st.pyplot(fig)
-                                st.success("Scatter plot generated successfully!")
+                                st.success("Plot sebar berhasil dibuat!")
                                 st.pyplot(plt.gcf())
                                 plt.close()
                                 # Add interpretation
                                 st.info("""
-                                **Interpretation Tips:**
-                                - Well-separated clusters indicate good class separability
-                                - Overlapping clusters suggest potential classification confusion
-                                - Ellipses show the spread and correlation of class data
+                                **Tips interpretasi:**
+                                - Kluster yang terpisah dengan jelas menunjukkan keterpisahan kelas yang baik
+                                - Kluster yang saling tumpang tindih menandakan kemungkinan terjadinya kekeliruan dalam klasifikasi
+                                - Bulatan elips menunjukkan sebaran dan korelasi data dari setiap kelas
                                 """)
                         except Exception as e:
                             st.error(f"Error generating scatter plot: {str(e)}")
             else:
-                st.warning("Need at least 2 bands for scatter plot visualization.")
+                st.warning("Memerlukan setidaknya 2 kanal/band untuk visualisasi plot sebar.")
    
         # TAB 4: MULTI-BAND SCATTER COMBINATIONS
         with viz4:
-            st.markdown("### 3D Feature Space Exploration")
-            st.markdown("Explore the spectral signatures in 3D space. Rotate, zoom, and pan to understand class relationships in three-band feature space.")
+            st.markdown("### Eksplorasi Ruang Fitur 3D")
+            st.markdown("Jelajahi tanda spektral dalam ruang 3D. Putar, zoom, dan geser untuk memahami hubungan kelas dalam ruang fitur tiga-kanal/band.")
             
             if len(available_bands) >= 3:
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
                     x_band_3d = st.selectbox(
-                        "X-axis band:",
+                        "Band sumbu-X:",
                         options=available_bands,
                         index=available_bands.index("RED") if "RED" in available_bands else 0,
                         key="scatter_3d_x"
@@ -531,7 +531,7 @@ if (st.session_state.get("analysis_complete", False) and
                 
                 with col2:
                     y_band_3d = st.selectbox(
-                        "Y-axis band:",
+                        "Band sumbu-Y:",
                         options=available_bands,
                         index=available_bands.index("GREEN") if "GREEN" in available_bands else (1 if len(available_bands) > 1 else 0),
                         key="scatter_3d_y"
@@ -539,7 +539,7 @@ if (st.session_state.get("analysis_complete", False) and
                 
                 with col3:
                     z_band_3d = st.selectbox(
-                        "Z-axis band:",
+                        "Band sumbu-Z:",
                         options=available_bands,
                         index=available_bands.index("NIR") if "NIR" in available_bands else (2 if len(available_bands) > 2 else 0),
                         key="scatter_3d_z"
@@ -547,12 +547,12 @@ if (st.session_state.get("analysis_complete", False) and
                 
                 col4, col5 = st.columns(2)
                 with col4:
-                    marker_size_3d = st.slider("Point size:", 2, 8, 4, 1, key="marker_3d")
+                    marker_size_3d = st.slider("Ukuran titik:", 2, 8, 4, 1, key="marker_3d")
                 with col5:
-                    opacity_3d = st.slider("Point transparency:", 0.2, 1.0, 0.7, 0.1, key="opacity_3d")
+                    opacity_3d = st.slider("Transparansi titik:", 0.2, 1.0, 0.7, 0.1, key="opacity_3d")
                 
-                if st.button("Generate 3D Scatter Plot", key="btn_3d_scatter", type="primary"):
-                    with st.spinner("Generating 3D scatter plot..."):
+                if st.button("Buat plot sebar 3-dimensi", key="btn_3d_scatter", type="primary"):
+                    with st.spinner("Membuat plot sebar 3-dimensi..."):
                         try:
                             fig = plotter.scatter_plot_3d(
                                 pixel_data,
@@ -564,46 +564,46 @@ if (st.session_state.get("analysis_complete", False) and
                             )
                             if fig:
                                 st.plotly_chart(fig,width='stretch')
-                                st.success("✅ 3D scatter plot generated successfully!")
+                                st.success("✅ Plot sebar 3-dimensi berhasil dibuat!")
                                 
                                 st.info("""
-                                **💡 Interactive Features:**
-                                - **Rotate**: Click and drag to rotate the 3D view
-                                - **Zoom**: Scroll wheel or pinch to zoom in/out
-                                - **Pan**: Right-click and drag to pan
-                                - **Hover**: See exact values for all three bands
-                                - **Legend**: Click to show/hide classes
-                                - **Reset**: Double-click to reset view
+                                **💡 Fitur-fitur interaktif:**
+                                - **Putar (Rotate)**: Klik dan seret untuk memutar tampilan 3D  
+                                - **Perbesar (Zoom)**: Gunakan *scroll* untuk memperbesar/memperkecil tampilan  
+                                - **Geser (Pan)**: Klik kanan dan seret untuk menggeser tampilan  
+                                - **Arahkan (Hover)**: Arahkan kursor untuk melihat nilai pasti dari ketiga band  
+                                - **Legenda (Legend)**: Klik untuk menampilkan atau menyembunyikan kelas  
+                                - **Atur Ulang (Reset)**: Klik dua kali untuk mengembalikan tampilan semula  
                                 
-                                **Analysis Tips:**
-                                - Look for well-separated clusters in 3D space
-                                - Rotate to find angles that best show class separation
-                                - Classes that overlap in 2D may separate in 3D
-                                - Common combinations: RGB, NIR-RED-GREEN, SWIR-NIR-RED
+                                **Tips Analisis:**
+                                - Perhatikan sebaran kelompok (cluster) yang terpisah dengan jelas dalam ruang 3D  
+                                - Putar tampilan untuk menemukan sudut pandang yang paling menunjukkan keterpisahan antar kelas  
+                                - Kelas yang tumpang tindih pada ruang 2D mungkin dapat terpisah di ruang 3D  
+                                - Kombinasi band yang umum digunakan: **RGB**, **NIR-RED-GREEN**, **SWIR-NIR-RED**
                                 """)
                         except Exception as e:
-                            st.error(f"Error generating 3D scatter plot: {str(e)}")
+                            st.error(f"Terjadi kesalahan dalam membuat plot sebar 3-dimensi: {str(e)}")
             else:
-                st.warning("Need at least 3 bands for 3D scatter plot visualization.")
-                st.info("The 3D scatter plot requires at least three spectral bands. " \
-                    "Please ensure your analysis includes sufficient bands.")        
+                st.warning("Memerlukan setidaknya 3 kanal/band untuk visualisasi plot sebar 3-dimensi.")
+                st.info("Plot sebar 3-dimensi memerlukan setidaknya tiga band spektral. " \
+                    "Pastikan analisis Anda mencakup kanal/band yang cukup.")        
                 st.markdown("---")
-                st.markdown("**Right-click on any plot and select 'Save image as...' to download")
+                st.markdown("**Klik kanan pada plot mana pun dan pilih 'Save image as...' untuk mengunduh")
             
     except Exception as e:
-                st.error(f"Error initializing visualization plotter: {str(e)}")
-                st.info("Please ensure the separability analysis completed successfully.")
+                st.error(f"Terjadi kesalahan dalam menyiapkan plot sebar 3-dimensi: {str(e)}")
+                st.info("Pastikan analisis keterpisahan telah berhasil diselesaikan.")
 else:
-    st.info("Please complete the separability analysis first to visualize training data.")
+    st.info("Selesaikan analisis keterpisahan terlebih dahulu untuk memvisualisasikan data latihan.")
     st.markdown("""
-    **Available visualizations after analysis:**
-    - **Histograms**: Distribution of spectral values by class
-    - **Box Plots**: Statistical summary of spectral values
-    - **Scatter Plots**: 2D feature space visualization
-    - **3D Scatter Plot**: 3D feature space visualization
+    **Visualisasi yang tersedia setelah analisis:**
+    - **Histogram**: Distribusi nilai spektral per kelas
+    - **Plot kotak**: Ringkasan statistik nilai spektral
+    - **Plot sebar**: Visualisasi ruang fitur 2D
+    - **Plot sebar 3-dimensi**: Visualisasi ruang fitur 3D
     """)        
 st.divider()
-st.subheader("Module Navigation")
+st.subheader("Navigasi modul")
 
 # Check if Module 2 is completed (has at least one class)
 module_2_completed = len(st.session_state.get("classes", [])) > 0
@@ -613,20 +613,20 @@ col1, col2 = st.columns(2)
 
 with col1:
     # Back to Module 3 button (always available)
-    if st.button("⬅️ Back to Module 3: Generate ROI", use_container_width=True):
+    if st.button("⬅️ Kembali ke Modul 3: Penentuan Data Latih", use_container_width=True):
         st.switch_page("pages/3_Module_3_Generate_ROI.py")
 
 with col2:
     # Forward to Module 6 button (conditional)
     if module_2_completed:
-        if st.button("➡️ Go to Module 6: Supervised Classification", type="primary", use_container_width=True):
+        if st.button("➡️ Lanjut ke Modul 6: Buat Peta Tutupan Lahan", type="primary", use_container_width=True):
             st.switch_page("pages/5_Module_6_Classification_and_LULC_Creation.py")
     else:
-        st.button("🔒 Complete Module 4 First", disabled=True,width='stretch', 
-                 help="Analyze the region of interest in order to proceed")
+        st.button("🔒 Selesaikan Modul 4 Terlebih Dahulu", disabled=True, use_container_width=True, 
+                 help="Analisis area sampel untuk melanjutkan")
 
 # Optional: Show completion status
 if module_2_completed:
-    st.success(f"✅ Analysis Complete")
+    st.success(f"✅ Analisis Selesai")
 else:
-    st.info("Analyze the region of interest in order to proceed")
+    st.info("Analisis area sampel untuk melanjutkan")

@@ -368,7 +368,7 @@ def render_class_display():
             )
         
         with col4:
-            if st.button("✏️", key=f"edit_{idx}", help="Edit class"):
+            if st.button("✏️", key=f"edit_{idx}", help="Ubah kelas"):
                 manager.edit_class(idx)
                 sync_session_from_manager()  # Sync back to session state
                 st.rerun()
