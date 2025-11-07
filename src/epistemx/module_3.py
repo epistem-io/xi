@@ -1,8 +1,7 @@
 """
-Module 3 Backend - Simplified Legacy Support
+Module 3 Backend - Training Data Management
 
-This module provides backward compatibility with existing Module 3 functionality.
-Contains essential legacy classes and imports for direct function calls.
+This module provides training data loading and processing functionality.
 """
 
 import streamlit as st
@@ -18,14 +17,11 @@ from shapely.geometry import shape
 # Configure logging
 logger = logging.getLogger(__name__)
 
-
-# Legacy imports for backward compatibility
 try:
-    # Try to import existing legacy classes if available
     import ee
     
     class InputCheck:
-        """Legacy input checking functionality."""
+        """Input checking functionality."""
         
         @staticmethod
         def check_prerequisites():
@@ -41,7 +37,7 @@ try:
             return aoi_available and classification_available and composite_available
     
     class SyncTrainData:
-        """Legacy training data synchronization functionality."""
+        """Training data synchronization functionality."""
         
         @staticmethod
         def LoadTrainData(landcover_df, aoi_geometry, training_shp_path=None, training_ee_path=None):
@@ -100,14 +96,97 @@ try:
                     # Manual conversion to GeoDataFrame with size limit
                     logger.info("Converting to GeoDataFrame...")
                     
-                    # Check collection size and limit if necessary
+                    # Check collection size and implement stratified sampling for large datasets
                     collection_size = training_fc.size().getInfo()
                     logger.info(f"Collection size: {collection_size}")
                     
+                    # If collection is larger than 5000, use stratified sampling to ensure class representation
                     if collection_size > 5000:
-                        logger.warning(f"Collection has {collection_size} features, limiting to 5000 for processing")
-                        training_fc = training_fc.limit(5000)
-                        collection_size = 5000
+                        logger.info(f"Collection has {collection_size} features, implementing stratified sampling for class representation")
+                        
+                        try:
+                            # Get unique classes and their counts
+                            class_field = 'kelas'  # The field containing class information
+                            unique_classes = training_fc.aggregate_array(class_field).distinct().getInfo()
+                            logger.info(f"Found {len(unique_classes)} unique classes: {unique_classes}")
+                            
+                            # Calculate samples per class (aim for 5000 total)
+                            target_total = 5000
+                            base_samples_per_class = target_total // len(unique_classes)
+                            remaining_samples = target_total % len(unique_classes)
+                            
+                            logger.info(f"Target: {target_total} samples, Base per class: {base_samples_per_class}")
+                            
+                            all_features = []
+                            class_counts = {}
+                            
+                            for i, class_value in enumerate(unique_classes):
+                                try:
+                                    # Calculate samples for this class
+                                    samples_for_class = base_samples_per_class
+                                    if i < remaining_samples:  # Distribute remaining samples to first few classes
+                                        samples_for_class += 1
+                                    
+                                    logger.info(f"Sampling class {class_value}: targeting {samples_for_class} samples")
+                                    
+                                    # Filter by class and get count
+                                    class_fc = training_fc.filter(ee.Filter.eq(class_field, class_value))
+                                    class_size = class_fc.size().getInfo()
+                                    
+                                    if class_size == 0:
+                                        logger.warning(f"Class {class_value} has no features, skipping")
+                                        continue
+                                    
+                                    # Sample from this class
+                                    actual_samples = min(samples_for_class, class_size)
+                                    if class_size <= samples_for_class:
+                                        # Take all features if class has fewer than target
+                                        sampled_fc = class_fc
+                                        logger.info(f"Class {class_value}: taking all {class_size} features")
+                                    else:
+                                        # Random sample if class has more than target
+                                        sampled_fc = class_fc.randomColumn('random', 42).sort('random').limit(actual_samples)
+                                        logger.info(f"Class {class_value}: sampling {actual_samples} from {class_size} features")
+                                    
+                                    # Get the features
+                                    class_info = sampled_fc.getInfo()
+                                    class_features = class_info['features']
+                                    
+                                    all_features.extend(class_features)
+                                    class_counts[class_value] = len(class_features)
+                                    
+                                    logger.info(f"Class {class_value}: collected {len(class_features)} features")
+                                    
+                                except Exception as class_error:
+                                    logger.error(f"Error sampling class {class_value}: {class_error}")
+                                    continue
+                            
+                            # Create combined feature info
+                            info = {
+                                'type': 'FeatureCollection',
+                                'features': all_features
+                            }
+                            features = all_features
+                            
+                            # Log final class distribution
+                            logger.info(f"Stratified sampling complete: {len(features)} total features")
+                            for class_val, count in class_counts.items():
+                                percentage = (count / len(features)) * 100 if len(features) > 0 else 0
+                                logger.info(f"  Class {class_val}: {count} features ({percentage:.1f}%)")
+                            
+                        except Exception as stratified_error:
+                            logger.error(f"Stratified sampling failed: {stratified_error}")
+                            logger.info("Falling back to simple random sampling")
+                            # Fallback to simple random sampling
+                            training_fc = training_fc.randomColumn('random', 42).sort('random').limit(5000)
+                            info = training_fc.getInfo()
+                            features = info['features']
+                        
+                    else:
+                        # For collections <= 5000, load normally
+                        logger.info(f"Collection size ({collection_size}) is within normal limits, loading directly")
+                        info = training_fc.getInfo()
+                        features = info['features']
                     
                     if collection_size == 0:
                         logger.warning("No features found in collection")
@@ -126,8 +205,7 @@ try:
                             }
                         }
                     
-                    info = training_fc.getInfo()
-                    features = info['features']
+
                     logger.info(f"Features to convert: {len(features)}")
                     
                     data = []
@@ -385,7 +463,7 @@ try:
                 return pd.DataFrame(), 0, pd.DataFrame()
     
     class SplitTrainData:
-        """Legacy data splitting functionality."""
+        """Data splitting functionality."""
         
         @staticmethod
         def SplitProcess(train_data, TrainSplitPct=0.7, random_state=123):
@@ -416,7 +494,7 @@ try:
                 return gpd.GeoDataFrame(), gpd.GeoDataFrame()
     
     class LULCSamplingTool:
-        """Legacy LULC sampling tool functionality."""
+        """LULC sampling tool functionality."""
         
         def __init__(self, lulc_table):
             self.lulc_table = lulc_table
@@ -431,7 +509,7 @@ try:
                 return False, None
 
 except ImportError as e:
-    logger.warning(f"Some legacy functionality not available: {str(e)}")
+    logger.warning(f"Some functionality not available: {str(e)}")
     
     # Create placeholder classes if imports fail
     class InputCheck:
@@ -442,32 +520,32 @@ except ImportError as e:
     class SyncTrainData:
         @staticmethod
         def LoadTrainData(*args, **kwargs):
-            raise NotImplementedError("Legacy SyncTrainData not available")
+            raise NotImplementedError("SyncTrainData not available")
         
         @staticmethod
         def SetClassField(*args, **kwargs):
-            raise NotImplementedError("Legacy SyncTrainData not available")
+            raise NotImplementedError("SyncTrainData not available")
         
         @staticmethod
         def ValidClass(*args, **kwargs):
-            raise NotImplementedError("Legacy SyncTrainData not available")
+            raise NotImplementedError("SyncTrainData not available")
         
         @staticmethod
         def CheckSufficiency(*args, **kwargs):
-            raise NotImplementedError("Legacy SyncTrainData not available")
+            raise NotImplementedError("SyncTrainData not available")
         
         @staticmethod
         def FilterTrainAoi(*args, **kwargs):
-            raise NotImplementedError("Legacy SyncTrainData not available")
+            raise NotImplementedError("SyncTrainData not available")
         
         @staticmethod
         def TrainDataRaw(*args, **kwargs):
-            raise NotImplementedError("Legacy SyncTrainData not available")
+            raise NotImplementedError("SyncTrainData not available")
     
     class SplitTrainData:
         @staticmethod
         def SplitProcess(data, TrainSplitPct=0.7, random_state=123):
-            """Simple fallback split functionality."""
+            """Simple split functionality."""
             try:
                 if data is None or data.empty:
                     return gpd.GeoDataFrame(), gpd.GeoDataFrame()
@@ -484,7 +562,7 @@ except ImportError as e:
                 val_split = data.loc[val_indices].copy()
                 return train_split, val_split
             except Exception as e:
-                logger.error(f"Error in fallback split: {str(e)}")
+                logger.error(f"Error in split: {str(e)}")
                 return gpd.GeoDataFrame(), gpd.GeoDataFrame()
     
     class LULCSamplingTool:

@@ -21,7 +21,7 @@ initialize_earth_engine()
 # Initialize session state variables
 session_defaults = {
     'sampling_data': {'type': 'FeatureCollection', 'features': []},
-    'pending_features': [],  # For batch feature input
+    'pending_features': [], 
     'feature_count': 0,
     'last_recorded_feature': None,
     'center_lat': 0,
@@ -29,9 +29,8 @@ session_defaults = {
     'map_zoom': 2,
     'initial_fit_done': False,
     'training_gdf': None,
-    'active_tab': 0,
-    'show_aoi_layer': False,
-    'show_geotiff_layer': False
+    'show_aoi_layer': True,
+    'show_geotiff_layer': True
 }
 
 for key, default_value in session_defaults.items():
@@ -67,7 +66,6 @@ Modul ini dibuat untuk menentukan data sampel training.
 # Add navigation sidebar
 Navbar()
 
-st.markdown("Ketersediaan keluaran hasil modul 1 dan 2")
 col1, col2, col3 = st.columns(3)
 
 aoi_available = 'AOI' in st.session_state and 'gdf' in st.session_state
@@ -150,13 +148,28 @@ if reference_data_source:
                         bounds[2] < 90 or bounds[2] > 145 or
                         bounds[1] < -15 or bounds[1] > 10 or
                         bounds[3] < -15 or bounds[3] > 10):
-                        st.warning("⚠️ AOI bounds appear to be outside Indonesia region")
+                        st.warning("⚠️ Batas AOI teridentifikasi di luar region Indonesia")
                         st.warning("Hal ini dapat menyebabkan masalah dalam memuat data pelatihan")
                     
-                    area_deg2 = (bounds[2] - bounds[0]) * (bounds[3] - bounds[1])
-                    if area_deg2 > 10:
-                        st.warning(f"⚠️ AOI covers a very large area ({area_deg2:.2f} deg²)")
-                        st.warning("This might cause performance issues or timeouts")
+                    # Calculate actual area in square kilometers
+                    try:
+                        # Calculate area using geodesic calculation for more accuracy
+                        total_area_km2 = AOI_GDF_wgs84.geometry.to_crs('EPSG:3857').area.sum() / 1_000_000  # Convert m² to km²
+                        
+                        if total_area_km2 > 50000:  # 50,000 km² threshold
+                            st.warning(f"⚠️ AOI meliputi area yang cukup luas ({total_area_km2:,.0f} km²)")
+                            st.warning("Area yang luas dapat menyebabkan masalah performa atau timeout")
+                        elif total_area_km2 > 10000:  # 10,000 km² threshold
+                            st.info(f"ℹ️ AOI meliputi area seluas {total_area_km2:,.0f} km²")
+                            st.warning("Mohon tunggu hingga data dimuat sempurna")
+                        else:
+                            st.success(f"✅ AOI meliputi area seluas {total_area_km2:,.0f} km²")
+                            
+                    except Exception as area_error:
+                        # Fallback to degree calculation if area calculation fails
+                        area_deg2 = (bounds[2] - bounds[0]) * (bounds[3] - bounds[1])
+                        st.warning(f"⚠️ AOI meliputi area yang cukup luas ({area_deg2:.2f} deg²)")
+                        st.warning("Tidak dapat menghitung area dalam km², menggunakan estimasi derajat")
                     
                     invalid_geoms = AOI_GDF_wgs84[~AOI_GDF_wgs84.geometry.is_valid]
                     if len(invalid_geoms) > 0:
@@ -331,131 +344,133 @@ if reference_data_source:
         
         if True:  # Always show if we reach this point
             st.markdown("**Preview data pelatihan (tabel):**")
-            # Show first 10 rows of the training data
+            # Show training data
             preview_df = train_data_ref.head(10)
             st.dataframe(preview_df, use_container_width=True)
             
             st.markdown("**Preview data pelatihan (peta):**")
-            import folium
-            from streamlit_folium import st_folium
             
-            # Initialize map
-            m = folium.Map(tiles="OpenStreetMap")
+            with st.spinner("Memuat peta dan data pelatihan..."):
+                import folium
+                from streamlit_folium import st_folium
+                
+                # Initialize map
+                m = folium.Map(tiles="OpenStreetMap")
         
-            # Add basemap from module 1 if available
-            if st.session_state.geotiff_overlay is not None:
-                vis_params = {
-                    'bands': ['RED', 'GREEN', 'BLUE'],
-                    'min': 0,
-                    'max': 0.3
-                }
-                ee_image = st.session_state.geotiff_overlay.clip(AOI)
-                def add_ee_layer(self, ee_image_object, vis_params, name, opacity=1):
-                    map_id_dict = ee.Image(ee_image_object).getMapId(vis_params)
-                    folium.raster_layers.TileLayer(
-                        tiles=map_id_dict['tile_fetcher'].url_format,
-                        attr='Google Earth Engine',
-                        name=name,
-                        overlay=True,
-                        control=True,
-                        opacity=opacity
-                    ).add_to(self)
-                folium.Map.add_ee_layer = add_ee_layer
-                m.add_ee_layer(ee_image, vis_params, "Komposit Citra")
+                # Add basemap from module 1 if available
+                if st.session_state.geotiff_overlay is not None:
+                    vis_params = {
+                        'bands': ['RED', 'GREEN', 'BLUE'],
+                        'min': 0,
+                        'max': 0.3
+                    }
+                    ee_image = st.session_state.geotiff_overlay.clip(AOI)
+                    def add_ee_layer(self, ee_image_object, vis_params, name, opacity=1):
+                        map_id_dict = ee.Image(ee_image_object).getMapId(vis_params)
+                        folium.raster_layers.TileLayer(
+                            tiles=map_id_dict['tile_fetcher'].url_format,
+                            attr='Google Earth Engine',
+                            name=name,
+                            overlay=True,
+                            control=True,
+                            opacity=opacity
+                        ).add_to(self)
+                    folium.Map.add_ee_layer = add_ee_layer
+                    m.add_ee_layer(ee_image, vis_params, "Komposit Citra")
         
-            # Add AOI layer
-            if AOI_GDF is not None:
-                aoi_gdf_wgs84 = AOI_GDF.to_crs('EPSG:4326') if AOI_GDF.crs != 'EPSG:4326' else AOI_GDF
-                folium.GeoJson(
-                    aoi_gdf_wgs84,
-                    name="AOI",
-                    style_function=lambda x: {'fillColor': 'transparent', 'color': '#FFD700', 'weight': 3}
-                ).add_to(m)
-        
-            # Add training data layer with colors
-            gdf_wgs84 = train_data_ref.to_crs('EPSG:4326') if train_data_ref.crs != 'EPSG:4326' else train_data_ref
-            class_to_color = dict(zip(LULCTable['LULC_Type'], LULCTable['color_palette']))
-            class_to_id = dict(zip(LULCTable['LULC_Type'], LULCTable['ID']))
-            
-            # Use the correct field name for reference data (usually 'kelas')
-            TrainField_ref = 'kelas'  # Reference data uses 'kelas' field
-            
-            for idx, row in gdf_wgs84.iterrows():
-                class_value = row[TrainField_ref] if TrainField_ref in row else None
-                if isinstance(class_value, int):
-                    # Look up class name by ID
-                    matching_rows = LULCTable[LULCTable['ID'] == class_value]
-                    class_name = matching_rows['LULC_Type'].values[0] if len(matching_rows) > 0 else 'Unknown'
-                else:
-                    # Use the class value directly if it's a string and exists in color mapping
-                    class_name = class_value if class_value in class_to_color else 'Unknown'
-                color = class_to_color.get(class_name, '#808080')
-                geom = row.geometry
-                if geom.geom_type == 'Point':
-                    folium.Marker(
-                        location=[geom.y, geom.x],
-                        icon=folium.Icon(color='white', icon_color=color, icon='circle', prefix='fa'),
-                        popup=f"Class: {class_name}"
-                    ).add_to(m)
-                elif geom.geom_type == 'Polygon':
+                # Add AOI layer
+                if AOI_GDF is not None:
+                    aoi_gdf_wgs84 = AOI_GDF.to_crs('EPSG:4326') if AOI_GDF.crs != 'EPSG:4326' else AOI_GDF
                     folium.GeoJson(
-                        geom,
-                        name=class_name,
-                        style_function=lambda x, color=color: {'fillColor': color, 'color': color, 'weight': 2}
+                        aoi_gdf_wgs84,
+                        name="AOI",
+                        style_function=lambda x: {'fillColor': 'transparent', 'color': '#FFD700', 'weight': 3}
                     ).add_to(m)
         
-            # Add legend
-            legend_html = '''
-            <div style="
-                position: fixed; 
-                bottom: 10px; 
-                left: 10px; 
-                width: auto; 
-                height: auto; 
-                border: 1px solid #999; 
-                z-index: 9999; 
-                font-size: 12px; 
-                background-color: rgba(255, 255, 255, 0.9); 
-                padding: 10px 14px; 
-                border-radius: 6px; 
-                box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            ">
-                <b style="font-size: 13px; display: block; margin-bottom: 8px;">Legend</b>
-            '''
-
-            for class_name, color in class_to_color.items():
-                legend_html += f'''
-                <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                    <div style="
-                        background: {color}; 
-                        width: 16px; 
-                        height: 16px; 
-                        margin-right: 8px; 
-                        border: 1px solid #444; 
-                        border-radius: 3px;
-                    "></div>
-                    <span style="font-size: 12px; white-space: nowrap;">{class_name}</span>
-                </div>
+                # Add training data layer with colors
+                gdf_wgs84 = train_data_ref.to_crs('EPSG:4326') if train_data_ref.crs != 'EPSG:4326' else train_data_ref
+                class_to_color = dict(zip(LULCTable['LULC_Type'], LULCTable['color_palette']))
+                class_to_id = dict(zip(LULCTable['LULC_Type'], LULCTable['ID']))
+                
+                # Use the correct field name for reference data (usually 'kelas')
+                TrainField_ref = 'kelas'  # Reference data uses 'kelas' field
+                
+                for idx, row in gdf_wgs84.iterrows():
+                    class_value = row[TrainField_ref] if TrainField_ref in row else None
+                    if isinstance(class_value, int):
+                        # Look up class name by ID
+                        matching_rows = LULCTable[LULCTable['ID'] == class_value]
+                        class_name = matching_rows['LULC_Type'].values[0] if len(matching_rows) > 0 else 'Unknown'
+                    else:
+                        # Use the class value directly if it's a string and exists in color mapping
+                        class_name = class_value if class_value in class_to_color else 'Unknown'
+                    color = class_to_color.get(class_name, '#808080')
+                    geom = row.geometry
+                    if geom.geom_type == 'Point':
+                        folium.Marker(
+                            location=[geom.y, geom.x],
+                            icon=folium.Icon(color='white', icon_color=color, icon='circle', prefix='fa'),
+                            popup=f"Class: {class_name}"
+                        ).add_to(m)
+                    elif geom.geom_type == 'Polygon':
+                        folium.GeoJson(
+                            geom,
+                            name=class_name,
+                            style_function=lambda x, color=color: {'fillColor': color, 'color': color, 'weight': 2}
+                        ).add_to(m)
+        
+                # Add legend
+                legend_html = '''
+                <div style="
+                    position: fixed; 
+                    bottom: 10px; 
+                    left: 10px; 
+                    width: auto; 
+                    height: auto; 
+                    border: 1px solid #999; 
+                    z-index: 9999; 
+                    font-size: 12px; 
+                    background-color: rgba(255, 255, 255, 0.9); 
+                    padding: 10px 14px; 
+                    border-radius: 6px; 
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                ">
+                    <b style="font-size: 13px; display: block; margin-bottom: 8px;">Legend</b>
                 '''
 
-            legend_html += '</div>'
-            m.get_root().html.add_child(folium.Element(legend_html))
+                for class_name, color in class_to_color.items():
+                    legend_html += f'''
+                    <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                        <div style="
+                            background: {color}; 
+                            width: 16px; 
+                            height: 16px; 
+                            margin-right: 8px; 
+                            border: 1px solid #444; 
+                            border-radius: 3px;
+                        "></div>
+                        <span style="font-size: 12px; white-space: nowrap;">{class_name}</span>
+                    </div>
+                    '''
 
-            # Fit bounds to data or AOI
-            if not gdf_wgs84.empty:
-                bounds = gdf_wgs84.total_bounds
-            elif AOI_GDF is not None:
-                bounds = aoi_gdf_wgs84.total_bounds
-            else:
-                bounds = None
-            if bounds is not None:
-                m.fit_bounds([[bounds[1], bounds[0]], [bounds[3], bounds[2]]])
-            
-            # Layer control
-            folium.LayerControl().add_to(m)
-            
-            # Display map (no returned objects to prevent reloads on interaction)
-            st_folium(m, width=None, height=500, key="ref_preview_map", returned_objects=[])
+                legend_html += '</div>'
+                m.get_root().html.add_child(folium.Element(legend_html))
+
+                # Fit bounds to data or AOI
+                if not gdf_wgs84.empty:
+                    bounds = gdf_wgs84.total_bounds
+                elif AOI_GDF is not None:
+                    bounds = aoi_gdf_wgs84.total_bounds
+                else:
+                    bounds = None
+                if bounds is not None:
+                    m.fit_bounds([[bounds[1], bounds[0]], [bounds[3], bounds[2]]])
+                
+                # Layer control
+                folium.LayerControl().add_to(m)
+                
+                # Display map (no returned objects to prevent reloads on interaction)
+                st_folium(m, width=None, height=500, key="ref_preview_map", returned_objects=[])
             
             # Button to continue to summary
             st.divider()
@@ -464,7 +479,7 @@ if reference_data_source:
                 if st.button("📊 Lanjut ke Ringkasan Data", type="primary", width="stretch"):
                     st.session_state['show_ref_summary'] = True
             with col2:
-                st.info("Preview menampilkan maksimal 10 sampel pertama")
+                st.info("Preview menampilkan sampel data pelatihan")
         else:
             st.warning("Tidak ada data pelatihan untuk ditampilkan dalam preview.")
             if st.button("📊 Lanjut ke Ringkasan Data", type="primary"):
@@ -531,14 +546,29 @@ if reference_data_source:
             
 
 
-else:
-    st.subheader("Pilih Mode Pengumpulan Data Pelatihan")
+else:   
     if st.session_state.get('switch_to_tab2', False):
         st.session_state['switch_to_tab2'] = False
         st.session_state['active_tab'] = 1
     
-    active_tab = st.session_state.get('active_tab', 0)
-    col1, col2 = st.columns(2)
+    active_tab = st.session_state.get('active_tab', None)  # No default value
+    
+    # Show information only when no tab is selected
+    if active_tab is None:
+        st.markdown("### Pilih Mode Pengumpulan Data")
+        st.markdown("""
+        Silakan pilih salah satu mode di bawah untuk melanjutkan:
+        
+        **📤 Unggah Data Sampel**
+        - Unggah file shapefile (.zip) yang berisi data sampel pelatihan
+        - Cocok jika Anda sudah memiliki data sampel dari sumber lain
+        
+        **🎯 Sampling On Screen**
+        - Buat data sampel secara manual dengan menggambar di peta
+        - Cocok untuk membuat data sampel baru atau melengkapi data yang ada
+        """)
+    
+    col1, col2, col3 = st.columns([2, 2, 1])
     with col1:
         if st.button("📤 Unggah Data Sampel", type="primary" if active_tab == 0 else "secondary", width="stretch", key="tab_button_1"):
             st.session_state['active_tab'] = 0
@@ -547,11 +577,19 @@ else:
         if st.button("🎯 Sampling On Screen", type="primary" if active_tab == 1 else "secondary", width="stretch", key="tab_button_2"):
             st.session_state['active_tab'] = 1
             st.rerun()
+    with col3:
+        if st.button("🔄 Reset", help="Clear current tab selection", width="stretch"):
+            if 'active_tab' in st.session_state:
+                del st.session_state['active_tab']
+            st.rerun()
     
-    st.info(f"📍 **Saat ini di:** {'Unggah Data Sampel' if active_tab == 0 else 'Sampling On Screen'}")
-    st.divider()
+    # Show current selection or prompt user to select
+    if active_tab is not None:
+        st.info(f"📍 **Saat ini di:** {'Unggah Data Sampel' if active_tab == 0 else 'Sampling On Screen'}")
+    else:
+        st.info("👆 **Pilih salah satu mode di atas untuk melanjutkan**")
     
-    # Show content based on active tab
+    # Show content based on active tab (only if user has selected)
     if active_tab == 0:
         st.subheader("A. Unggah data sampel (Shapefile)")
         st.markdown("Silakan unggah data shapefile terkompresi dalam format .zip")
@@ -599,122 +637,124 @@ else:
                             st.dataframe(gdf)
 
                             st.markdown("**Preview data pelatihan (peta):**")
-                            import folium
-                            from streamlit_folium import st_folium
                             
-                            # Initialize map
-                            m = folium.Map(tiles="OpenStreetMap")
+                            with st.spinner("Memuat peta dan data pelatihan..."):
+                                import folium
+                                from streamlit_folium import st_folium
+                                
+                                # Initialize map
+                                m = folium.Map(tiles="OpenStreetMap")
                         
-                            # Add basemap from module 1 if available
-                            if st.session_state.geotiff_overlay is not None:
-                                vis_params = {
-                                    'bands': ['RED', 'GREEN', 'BLUE'],
-                                    'min': 0,
-                                    'max': 0.3
-                                }
-                                ee_image = st.session_state.geotiff_overlay.clip(AOI)
-                                def add_ee_layer(self, ee_image_object, vis_params, name, opacity=1):
-                                    map_id_dict = ee.Image(ee_image_object).getMapId(vis_params)
-                                    folium.raster_layers.TileLayer(
-                                        tiles=map_id_dict['tile_fetcher'].url_format,
-                                        attr='Google Earth Engine',
-                                        name=name,
-                                        overlay=True,
-                                        control=True,
-                                        opacity=opacity
-                                    ).add_to(self)
-                                folium.Map.add_ee_layer = add_ee_layer
-                                m.add_ee_layer(ee_image, vis_params, "Komposit Citra")
+                                # Add basemap from module 1 if available
+                                if st.session_state.geotiff_overlay is not None:
+                                    vis_params = {
+                                        'bands': ['RED', 'GREEN', 'BLUE'],
+                                        'min': 0,
+                                        'max': 0.3
+                                    }
+                                    ee_image = st.session_state.geotiff_overlay.clip(AOI)
+                                    def add_ee_layer(self, ee_image_object, vis_params, name, opacity=1):
+                                        map_id_dict = ee.Image(ee_image_object).getMapId(vis_params)
+                                        folium.raster_layers.TileLayer(
+                                            tiles=map_id_dict['tile_fetcher'].url_format,
+                                            attr='Google Earth Engine',
+                                            name=name,
+                                            overlay=True,
+                                            control=True,
+                                            opacity=opacity
+                                        ).add_to(self)
+                                    folium.Map.add_ee_layer = add_ee_layer
+                                    m.add_ee_layer(ee_image, vis_params, "Komposit Citra")
                         
-                            # Add AOI layer
-                            if AOI_GDF is not None:
-                                aoi_gdf_wgs84 = AOI_GDF.to_crs('EPSG:4326') if AOI_GDF.crs != 'EPSG:4326' else AOI_GDF
-                                folium.GeoJson(
-                                    aoi_gdf_wgs84,
-                                    name="AOI",
-                                    style_function=lambda x: {'fillColor': 'transparent', 'color': '#FFD700', 'weight': 3}
-                                ).add_to(m)
-                        
-                            # Add training data layer with colors
-                            gdf_wgs84 = gdf.to_crs('EPSG:4326') if gdf.crs != 'EPSG:4326' else gdf
-                            class_to_color = dict(zip(LULCTable['LULC_Type'], LULCTable['color_palette']))
-                            class_to_id = dict(zip(LULCTable['LULC_Type'], LULCTable['ID']))
-                            for idx, row in gdf_wgs84.iterrows():
-                                class_value = row[TrainField] if TrainField in row else None
-                                if isinstance(class_value, int):
-                                    # Look up class name by ID
-                                    matching_rows = LULCTable[LULCTable['ID'] == class_value]
-                                    class_name = matching_rows['LULC_Type'].values[0] if len(matching_rows) > 0 else 'Unknown'
-                                else:
-                                    # Use the class value directly if it's a string and exists in color mapping
-                                    class_name = class_value if class_value in class_to_color else 'Unknown'
-                                color = class_to_color.get(class_name, '#808080')
-                                geom = row.geometry
-                                if geom.geom_type == 'Point':
-                                    folium.Marker(
-                                        location=[geom.y, geom.x],
-                                        icon=folium.Icon(color='white', icon_color=color, icon='circle', prefix='fa'),
-                                        popup=f"Class: {class_name}"
-                                    ).add_to(m)
-                                elif geom.geom_type == 'Polygon':
+                                # Add AOI layer
+                                if AOI_GDF is not None:
+                                    aoi_gdf_wgs84 = AOI_GDF.to_crs('EPSG:4326') if AOI_GDF.crs != 'EPSG:4326' else AOI_GDF
                                     folium.GeoJson(
-                                        geom,
-                                        name=class_name,
-                                        style_function=lambda x, color=color: {'fillColor': color, 'color': color, 'weight': 2}
+                                        aoi_gdf_wgs84,
+                                        name="AOI",
+                                        style_function=lambda x: {'fillColor': 'transparent', 'color': '#FFD700', 'weight': 3}
                                     ).add_to(m)
                         
-                            # Add legend
-                            legend_html = '''
-                            <div style="
-                                position: fixed; 
-                                bottom: 10px; 
-                                left: 10px; 
-                                width: auto; 
-                                height: auto; 
-                                border: 1px solid #999; 
-                                z-index: 9999; 
-                                font-size: 12px; 
-                                background-color: rgba(255, 255, 255, 0.9); 
-                                padding: 10px 14px; 
-                                border-radius: 6px; 
-                                box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-                            ">
-                                <b style="font-size: 13px; display: block; margin-bottom: 8px;">Legend</b>
-                            '''
-
-                            for class_name, color in class_to_color.items():
-                                legend_html += f'''
-                                <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                                    <div style="
-                                        background: {color}; 
-                                        width: 16px; 
-                                        height: 16px; 
-                                        margin-right: 8px; 
-                                        border: 1px solid #444; 
-                                        border-radius: 3px;
-                                    "></div>
-                                    <span style="font-size: 12px; white-space: nowrap;">{class_name}</span>
-                                </div>
+                                # Add training data layer with colors
+                                gdf_wgs84 = gdf.to_crs('EPSG:4326') if gdf.crs != 'EPSG:4326' else gdf
+                                class_to_color = dict(zip(LULCTable['LULC_Type'], LULCTable['color_palette']))
+                                class_to_id = dict(zip(LULCTable['LULC_Type'], LULCTable['ID']))
+                                for idx, row in gdf_wgs84.iterrows():
+                                    class_value = row[TrainField] if TrainField in row else None
+                                    if isinstance(class_value, int):
+                                        # Look up class name by ID
+                                        matching_rows = LULCTable[LULCTable['ID'] == class_value]
+                                        class_name = matching_rows['LULC_Type'].values[0] if len(matching_rows) > 0 else 'Unknown'
+                                    else:
+                                        # Use the class value directly if it's a string and exists in color mapping
+                                        class_name = class_value if class_value in class_to_color else 'Unknown'
+                                    color = class_to_color.get(class_name, '#808080')
+                                    geom = row.geometry
+                                    if geom.geom_type == 'Point':
+                                        folium.Marker(
+                                            location=[geom.y, geom.x],
+                                            icon=folium.Icon(color='white', icon_color=color, icon='circle', prefix='fa'),
+                                            popup=f"Class: {class_name}"
+                                        ).add_to(m)
+                                    elif geom.geom_type == 'Polygon':
+                                        folium.GeoJson(
+                                            geom,
+                                            name=class_name,
+                                            style_function=lambda x, color=color: {'fillColor': color, 'color': color, 'weight': 2}
+                                        ).add_to(m)
+                        
+                                # Add legend
+                                legend_html = '''
+                                <div style="
+                                    position: fixed; 
+                                    bottom: 10px; 
+                                    left: 10px; 
+                                    width: auto; 
+                                    height: auto; 
+                                    border: 1px solid #999; 
+                                    z-index: 9999; 
+                                    font-size: 12px; 
+                                    background-color: rgba(255, 255, 255, 0.9); 
+                                    padding: 10px 14px; 
+                                    border-radius: 6px; 
+                                    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                                ">
+                                    <b style="font-size: 13px; display: block; margin-bottom: 8px;">Legend</b>
                                 '''
 
-                            legend_html += '</div>'
-                            m.get_root().html.add_child(folium.Element(legend_html))
+                                for class_name, color in class_to_color.items():
+                                    legend_html += f'''
+                                    <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                                        <div style="
+                                            background: {color}; 
+                                            width: 16px; 
+                                            height: 16px; 
+                                            margin-right: 8px; 
+                                            border: 1px solid #444; 
+                                            border-radius: 3px;
+                                        "></div>
+                                        <span style="font-size: 12px; white-space: nowrap;">{class_name}</span>
+                                    </div>
+                                    '''
 
-                            # Fit bounds to data or AOI
-                            if not gdf_wgs84.empty:
-                                bounds = gdf_wgs84.total_bounds
-                            elif AOI_GDF is not None:
-                                bounds = aoi_gdf_wgs84.total_bounds
-                            else:
-                                bounds = None
-                            if bounds is not None:
-                                m.fit_bounds([[bounds[1], bounds[0]], [bounds[3], bounds[2]]])
-                            
-                            # Layer control
-                            folium.LayerControl().add_to(m)
-                            
-                            # Display map (no returned objects to prevent reloads on interaction)
-                            st_folium(m, width=None, height=400, key="preview_map", returned_objects=[])
+                                legend_html += '</div>'
+                                m.get_root().html.add_child(folium.Element(legend_html))
+
+                                # Fit bounds to data or AOI
+                                if not gdf_wgs84.empty:
+                                    bounds = gdf_wgs84.total_bounds
+                                elif AOI_GDF is not None:
+                                    bounds = aoi_gdf_wgs84.total_bounds
+                                else:
+                                    bounds = None
+                                if bounds is not None:
+                                    m.fit_bounds([[bounds[1], bounds[0]], [bounds[3], bounds[2]]])
+                                
+                                # Layer control
+                                folium.LayerControl().add_to(m)
+                                
+                                # Display map (no returned objects to prevent reloads on interaction)
+                                st_folium(m, width=None, height=400, key="preview_map", returned_objects=[])
                             
                             if st.button("Proses Data Pelatihan", type="primary", key="process_uploaded_data"):
                                 # Store the data first
@@ -953,12 +993,12 @@ else:
                     else:
                         feature['properties']['Class_Color'] = classes_df.get(class_name, '#808080')
 
-        st.subheader("Map Layers")
+        st.subheader("Kanvas Peta")
         col1, col2 = st.columns(2)
         with col1:
             selected_class = st.selectbox("**Pilih Kelas LULC untuk Menggambar:**", options=list(classes_df.keys()))
         with col2:
-            basemap_option = st.selectbox("**Peta Dasar:**", options=["Satellite (ESRI)", "CartoDB Dark", "Satellite (Google)", "OpenStreetMap", "CartoDB Positron"])
+            basemap_option = st.selectbox("**Peta Dasar:**", options=["OpenStreetMap", "Satellite (ESRI)", "CartoDB Dark", "Satellite (Google)", "CartoDB Positron"])
             
         def add_ee_layer(self, ee_image_object, vis_params, name, opacity=1.0):
             map_id_dict = ee.Image(ee_image_object).getMapId(vis_params)
@@ -970,6 +1010,16 @@ else:
         st.session_state.show_geotiff_layer = st.session_state.get('show_geotiff_layer', st.session_state.geotiff_overlay is not None)
         show_aoi, show_geotiff = st.session_state.show_aoi_layer, st.session_state.show_geotiff_layer
 
+        # Initialize map center and zoom based on AOI bounds
+        if AOI_GDF is not None and not st.session_state.get('initial_fit_done', False):
+            aoi_gdf_wgs84 = AOI_GDF.to_crs('EPSG:4326') if AOI_GDF.crs != 'EPSG:4326' else AOI_GDF
+            bounds = aoi_gdf_wgs84.total_bounds
+            st.session_state.center_lat = (bounds[1] + bounds[3]) / 2
+            st.session_state.center_lon = (bounds[0] + bounds[2]) / 2
+            max_diff = max(bounds[3] - bounds[1], bounds[2] - bounds[0])
+            st.session_state.map_zoom = int(13 - math.log(max_diff + 0.01)) if max_diff > 0 else 5
+            st.session_state.initial_fit_done = True
+
         map_center = [st.session_state.center_lat, st.session_state.center_lon]
         basemap_configs = {
             "OpenStreetMap": {"tiles": "OpenStreetMap"},
@@ -980,16 +1030,6 @@ else:
         }
         config = basemap_configs.get(basemap_option, basemap_configs["CartoDB Positron"])
         m = folium.Map(location=map_center, zoom_start=st.session_state.map_zoom, **config)
-
-        # Initialize map center ONLY if not already set
-        if AOI_GDF is not None and not st.session_state.get('initial_fit_done', False):
-            aoi_gdf_wgs84 = AOI_GDF.to_crs('EPSG:4326') if AOI_GDF.crs != 'EPSG:4326' else AOI_GDF
-            bounds = aoi_gdf_wgs84.total_bounds
-            st.session_state.center_lat = (bounds[1] + bounds[3]) / 2
-            st.session_state.center_lon = (bounds[0] + bounds[2]) / 2
-            max_diff = max(bounds[3] - bounds[1], bounds[2] - bounds[0])
-            st.session_state.map_zoom = int(13 - math.log(max_diff + 0.01)) if max_diff > 0 else 5
-            st.session_state.initial_fit_done = True
 
         if show_geotiff and st.session_state.geotiff_overlay is not None:
             vis_params = {'bands': ['RED', 'GREEN', 'BLUE'], 'min': 0, 'max': 0.3}
@@ -1023,6 +1063,19 @@ else:
                        'polygon': {"allowIntersection": False, "shapeOptions": {"color": classes_df[selected_class], "fillColor": classes_df[selected_class], "fillOpacity": 0.5}}}
         Draw(export=False, position='topleft', draw_options=draw_options, edit_options={'edit': False, 'remove': False}).add_to(m)
         folium.LayerControl().add_to(m)
+
+        # Fit map bounds to AOI on first launch
+        if AOI_GDF is not None and not st.session_state.get('map_bounds_fitted', False):
+            try:
+                aoi_gdf_wgs84 = AOI_GDF.to_crs('EPSG:4326') if AOI_GDF.crs != 'EPSG:4326' else AOI_GDF
+                bounds = aoi_gdf_wgs84.total_bounds
+                # Fit bounds with some padding
+                southwest = [bounds[1], bounds[0]]  # [lat_min, lon_min]
+                northeast = [bounds[3], bounds[2]]  # [lat_max, lon_max]
+                m.fit_bounds([southwest, northeast])
+                st.session_state.map_bounds_fitted = True
+            except Exception as bounds_error:
+                pass  # Continue without fitting bounds if there's an error
 
         col_map, col_colors = st.columns([3, 1])
         with col_map:
@@ -1091,8 +1144,8 @@ else:
             
             st.divider()
             st.markdown("**Visibilitas Layer:**")
-            st.session_state.show_aoi_layer = st.checkbox("Tampilkan Layer AOI", value=st.session_state.show_aoi_layer, disabled=AOI_GDF is None)
-            st.session_state.show_geotiff_layer = st.checkbox("Tampilkan Peta Dasar Kustom", value=st.session_state.show_geotiff_layer, disabled=st.session_state.geotiff_overlay is None)
+            st.session_state.show_aoi_layer = st.checkbox("Tampilkan Layer AOI", value=st.session_state.get('show_aoi_layer', True), disabled=AOI_GDF is None)
+            st.session_state.show_geotiff_layer = st.checkbox("Tampilkan Mosaik Citra", value=st.session_state.get('show_geotiff_layer', True), disabled=st.session_state.geotiff_overlay is None)
             
             st.markdown("**Warna Kelas:**")
             # Show only confirmed features
@@ -1412,6 +1465,8 @@ else:
 
 
 
+
+
 st.divider()
 st.subheader("Navigasi Modul")
 col1, col2 = st.columns(2)
@@ -1434,4 +1489,4 @@ with col2:
 if training_ready and not st.session_state.get('training_data_finalized', False):
     st.info("📋 Data pelatihan tersedia. Klik 'Gunakan Data Pelatihan Ini' untuk melanjutkan ke modul berikutnya.")
 elif not training_ready:
-    st.info("� Sitlakan kumpulkan data pelatihan menggunakan salah satu metode di atas.")
+    st.info("⚠️ Silakan kumpulkan data pelatihan menggunakan salah satu metode di atas.")
