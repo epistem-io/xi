@@ -276,30 +276,69 @@ if "train_final" in st.session_state:
 if st.session_state.get("analysis_complete", False):
     st.divider()
     st.subheader("B. Hasil Analisis")
-    st.markdown("""
-    Analisis keterpisahan menghasilkan beberapa tabel:
-    - **Statistik Wilayah Kajian:** 
-    - **Statistik Dasar Piksel:**
-    - **Ringkasan Keterpisahan:**
-    - **Keterpisahan Setiap Pasangan Kelas**
-    
-    """)
     #Display the results in table format
     #ROI Stats
-    with st.expander("ROI Statistics", expanded=False):
+    with st.expander("Statistik Sampel Area (ROI Statistics)", expanded=False):
         if "sample_stats" in st.session_state:
+            st.markdown("""
+            **Penjelasan Statistik Sampel:**
+            
+            Tabel ini menampilkan informasi dasar tentang area sampel (ROI) yang Anda buat untuk setiap kelas tutupan lahan:
+            - **Class**: Nama kelas tutupan/penggunaan lahan
+            - **Class ID**: Nomor identifikasi unik untuk setiap kelas
+            - **Sample Count**: Jumlah area sampel yang dibuat untuk kelas tersebut
+            - **Proportion**: Proporsi kelas tersebut terhadap keseluruhan sampel
+            
+            💡 Pastikan setiap kelas memiliki jumlah sampel yang cukup dan tersebar merata di wilayah kajian untuk hasil klasifikasi yang optimal.
+            """)
             st.dataframe(st.session_state["sample_stats"], use_container_width=True)
         else:
             st.write("Statistik sampel tidak tersedia.")
     #Pixel stats
-    with st.expander("Statistik Piksel", expanded=True):  
+    with st.expander("Statistik Piksel Sampel", expanded=True):  
         if "pixel_stats" in st.session_state:
+            st.markdown("""
+            **Penjelasan Statistik Piksel:**
+            
+            Tabel ini menampilkan ringkasan nilai spektral dari piksel-piksel yang diambil dari setiap kelas. Statistik ini membantu memahami karakteristik spektral setiap kelas tutupan lahan:
+            
+            - **Class**: Nama kelas tutupan/penggunaan lahan
+            - **Band**: Kanal spektral citra satelit (contoh: BLUE, GREEN, RED, NIR, SWIR)
+            - **Count**: Jumlah piksel yang berhasil diekstrak untuk analisis
+            - **Mean**: Nilai rata-rata reflektansi spektral kelas tersebut pada band tertentu
+            - **Std (Standard Deviation)**: Ukuran sebaran/variasi nilai spektral (nilai lebih tinggi = lebih beragam)
+            - **Min/Max**: Nilai reflektansi terendah dan tertinggi yang tercatat
+            
+            💡 **Cara Membaca:**
+            - Nilai **Mean** yang berbeda antar kelas pada band yang sama menunjukkan potensi keterpisahan yang baik
+            - **Std** yang rendah menunjukkan kelas tersebut homogen (konsisten secara spektral)
+            - Perhatikan band mana yang paling membedakan antar kelas (perbedaan Mean yang besar)
+            
+            **Contoh Interpretasi:**
+            - Vegetasi biasanya memiliki nilai NIR tinggi dan RED rendah
+            - Air biasanya memiliki nilai rendah di semua band, terutama NIR dan SWIR
+            """)
             st.dataframe(st.session_state["pixel_stats"], use_container_width=True)
         else:
             st.write("Statistik piksel tidak tersedia.")
     #Separability summary
     with st.expander("Ringkasan Analisis Keterpisahan", expanded=True):
         if "separability_summary" in st.session_state:
+            st.markdown("""
+            **Penjelasan Ringkasan Keterpisahan:**
+            
+            Tabel ini memberikan gambaran umum tentang seberapa baik kelas-kelas tutupan lahan Anda dapat dibedakan secara spektral:
+            
+            - **Total Pairs**: Jumlah total pasangan kelas yang dianalisis (jika ada N kelas, maka ada N×(N-1)/2 pasangan)
+            - **Good Separability Pairs (TD ≥ 1.8)**: Jumlah pasangan kelas yang dapat dipisahkan dengan baik
+            - **Weak Separability Pairs (1.0 ≤ TD < 1.8)**: Jumlah pasangan kelas dengan pemisahan lemah/marginal
+            - **Poor Separability Pairs (TD < 1.0)**: Jumlah pasangan kelas yang sulit dipisahkan
+            - **Mean TD**: Rata-rata nilai keterpisahan dari semua pasangan kelas
+            - **Min/Max TD**: Nilai keterpisahan terendah dan tertinggi
+            
+            💡 **Apa artinya bagi Anda?**
+            Semakin banyak pasangan dengan "Good Separability", semakin akurat hasil klasifikasi yang akan Anda dapatkan.
+            """)
             st.dataframe(st.session_state["separability_summary"], use_container_width=True)
             
             #Add interpretation
@@ -309,37 +348,185 @@ if st.session_state.get("analysis_complete", False):
             weak_pairs = summary.get('Weak Separability Pairs', 0)
             poor_pairs = summary.get('Poor Separability Pairs', 0)
             
+            st.markdown("---")
+            st.markdown("### 📊 Evaluasi Kualitas Data Latih")
+            
             if total_pairs > 0:
                 good_pct = (good_pairs / total_pairs) * 100
+                weak_pct = (weak_pairs / total_pairs) * 100
+                poor_pct = (poor_pairs / total_pairs) * 100
+                
+                # Visual representation
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("🟢 Baik", f"{good_pairs}/{total_pairs}", f"{good_pct:.1f}%")
+                with col2:
+                    st.metric("🟡 Lemah/Marjinal", f"{weak_pairs}/{total_pairs}", f"{weak_pct:.1f}%")
+                with col3:
+                    st.metric("🔴 Buruk", f"{poor_pairs}/{total_pairs}", f"{poor_pct:.1f}%")
+                
+                st.markdown("---")
+                
+                # Overall assessment
                 if good_pct >= 70:
-                    st.success(f"Sangat Baik! {good_pct:.1f}% dari pasangan kelas memiliki pemisahan data yang baik")
+                    st.success(f"""
+                    ✅ **Kualitas Data Latih: SANGAT BAIK**
+                    
+                    {good_pct:.1f}% dari pasangan kelas memiliki keterpisahan yang baik. Data latih Anda berkualitas tinggi dan siap untuk proses klasifikasi!
+                    
+                    **Rekomendasi:** Lanjutkan ke Modul 6 untuk membuat peta tutupan lahan.
+                    """)
                 elif good_pct >= 50:
-                    st.warning(f"Menengah: {good_pct:.1f}% dari pasangan kelas memiliki pemisahan data yang baik")
+                    st.warning(f"""
+                    ⚠️ **Kualitas Data Latih: MENENGAH**
+                    
+                    {good_pct:.1f}% dari pasangan kelas memiliki keterpisahan yang baik. Hasil klasifikasi mungkin cukup akurat, tetapi ada ruang untuk perbaikan.
+                    
+                    **Rekomendasi:** 
+                    - Periksa pasangan kelas dengan keterpisahan rendah di bawah
+                    - Pertimbangkan untuk menambah atau memperbaiki sampel untuk kelas yang bermasalah
+                    - Atau lanjutkan ke Modul 6 jika hasil ini sudah memadai untuk kebutuhan Anda
+                    """)
                 else:
-                    st.error(f"Buruk: Hanya {good_pct:.1f}% dari pasangan kelas memiliki pemisahan data yang baik")
+                    st.error(f"""
+                    ❌ **Kualitas Data Latih: PERLU PERBAIKAN**
+                    
+                    Hanya {good_pct:.1f}% dari pasangan kelas yang memiliki keterpisahan baik. Hasil klasifikasi kemungkinan akan memiliki banyak kesalahan.
+                    
+                    **Rekomendasi Perbaikan:**
+                    1. Periksa pasangan kelas dengan keterpisahan rendah di bagian "Pasangan Kelas dengan Keterpisahan Terendah"
+                    2. Kembali ke Modul 3 untuk:
+                       - Menambah jumlah sampel untuk kelas yang bermasalah
+                       - Memastikan sampel lebih representatif dan homogen
+                       - Mempertimbangkan penggabungan kelas yang sangat mirip secara spektral
+                    3. Periksa apakah definisi kelas Anda terlalu mirip (contoh: "Hutan Lebat" vs "Hutan Sedang")
+                    """)
             
             # Add detailed interpretation guide
             st.markdown("---")
-            st.markdown("**Interpretasi Nilai Indeks Keterpisahan TD (*Transformed Divergence*):**")
+            st.markdown("### 📖 Panduan Interpretasi Nilai TD (Transformed Divergence)")
             st.markdown("""
-            - **TD ≥ 1.8**: 🟢 **Good Separability** - Kelas - Kelas dapat dipisahkan secara spektral dan kemungkinan dapat diklasifikasikan dengan akurat
-            - **1.0 ≤ TD < 1.8**: 🟡 **Weak/Marginal Separability** - Terdapat tumpang tindih yang berpotensi menyebabkan kesalahan klasifikasi antara kedua kelas
-            - **TD < 1.0**: 🔴 **Poor Separability** - Terdapat tumpang tindih signifikan, potensi kesalahan klasifikasi tinggi atau bahkan tidak terpisahkan sama sekali.
+            Nilai TD mengukur seberapa berbeda dua kelas secara spektral. Rentang nilai: 0 - 2
+            
+            | Nilai TD | Kategori | Interpretasi | Dampak pada Klasifikasi |
+            |----------|----------|--------------|-------------------------|
+            | **≥ 1.8** | 🟢 **Baik** | Kedua kelas sangat berbeda secara spektral | Dapat diklasifikasikan dengan akurat |
+            | **1.0 - 1.8** | 🟡 **Lemah/Marjinal** | Ada tumpang tindih spektral | Potensi kesalahan klasifikasi sedang |
+            | **< 1.0** | 🔴 **Buruk** | Sangat mirip secara spektral | Tingkat kesalahan klasifikasi tinggi |
+            
+            **Contoh Kasus:**
+            - **TD = 1.95** antara "Hutan" dan "Lahan Terbangun" → Sangat baik, mudah dibedakan
+            - **TD = 1.45** antara "Sawah" dan "Lahan Terbuka" → Lemah, perlu perhatian khusus
+            - **TD = 0.75** antara "Semak Belukar" dan "Padang Rumput" → Buruk, sulit dibedakan
             """)
             
         else:
             st.write("Ringkasan analisis keterpisahan data tidak tersedia.")           
     # Detailed Separability Results
-    with st.expander("Rincian analisis keterpisahan", expanded=False):
+    with st.expander("Rincian Keterpisahan Setiap Pasangan Kelas", expanded=False):
         if "separability_results" in st.session_state:
+            st.markdown("""
+            **Penjelasan Tabel Rincian:**
+            
+            Tabel ini menampilkan nilai keterpisahan (TD) untuk setiap pasangan kelas yang mungkin. Gunakan tabel ini untuk:
+            
+            - **Mengidentifikasi pasangan kelas yang bermasalah**: Cari nilai TD < 1.0
+            - **Memahami hubungan antar kelas**: Kelas mana yang paling mirip secara spektral?
+            - **Merencanakan perbaikan**: Fokus pada pasangan kelas yang memiliki nilai TD rendah
+            
+            **Kolom dalam tabel:**
+            - **Class 1 / Class 2**: Pasangan kelas yang dibandingkan
+            - **TD Value**: Nilai Transformed Divergence (0-2, semakin tinggi semakin baik)
+            - **Category**: Kategori keterpisahan (Good/Weak/Poor)
+            
+            💡 **Tips:** Urutkan tabel berdasarkan "TD Value" untuk melihat pasangan yang paling bermasalah terlebih dahulu.
+            """)
             st.dataframe(st.session_state["separability_results"], use_container_width=True)
         else:
             st.write("Tidak ada hasil analisis keterpisahan terperinci yang tersedia")
     # Most Problematic Class Pairs
-    with st.expander("Pasangan Kelas dengan Keterpisahan Terendah", expanded=True):
+    with st.expander("⚠️ Pasangan Kelas dengan Keterpisahan Terendah (Perlu Perhatian)", expanded=True):
         if "lowest_separability" in st.session_state:
-            st.markdown("*Pasangan kelas ini memiliki tingkat pemisahan data terendah dan dapat menyebabkan kerancuan klasifikasi:*")
-            st.dataframe(st.session_state["lowest_separability"], use_container_width=True)
+            st.markdown("""
+            **Mengapa Ini Penting?**
+            
+            Pasangan kelas di bawah ini memiliki nilai keterpisahan terendah, yang berarti mereka paling sulit dibedakan secara spektral. 
+            Oleh karena itu, terdapat kemungkinan kesalahan klasifikasi diantara kedua kelas tersebut
+            
+            **Apa yang Harus Dilakukan?**
+            """)
+            
+            lowest_sep = st.session_state["lowest_separability"]
+            st.dataframe(lowest_sep, use_container_width=True)
+            
+            # Provide specific recommendations based on the results
+            st.markdown("---")
+            st.markdown("### 🔧 Rekomendasi Perbaikan")
+            
+            # Check if there are any poor separability pairs
+            if not lowest_sep.empty:
+                min_td = lowest_sep['TD_Distance'].min()
+                
+                if min_td < 1.0:
+                    st.error("""
+                    **🚨 Tindakan Diperlukan - Keterpisahan Buruk Terdeteksi**
+                    
+                    Beberapa pasangan kelas memiliki keterpisahan sangat rendah (TD < 1.0). Pertimbangkan langkah berikut:
+                    """)
+                    
+                    st.markdown("""
+                    **Opsi 1: Perbaiki Data Latih (Direkomendasikan)**
+                    - Tambahkan lebih banyak sampel untuk kelas yang bermasalah
+                    - Pastikan sampel lebih homogen dan tidak bercampur dengan kelas lain
+                    
+                    **Opsi 2: Gabungkan Kelas yang Mirip**
+                    - Jika dua kelas memang sangat mirip secara spektral, pertimbangkan untuk menggabungkannya
+                    - Contoh: "Tanaman Sawit" dan "Tanaman karet" → "Perkebunan Berkayu Keras"
+                    
+                    **Opsi 3: Gunakan Data Tambahan**
+                    - Pertimbangkan menggunakan data non-spektral (NDVI, EVI, dll)
+                    - Gunakan data elevasi atau kemiringan lereng sebagai data pendukung
+                    - Saat ini platform Epistem belum mendukung opsi ini, nantikan di fase selanjutnya
+                    
+                    **Opsi 4: Lanjutkan dengan Catatan**
+                    - Anda dapat melanjutkan modul, namun kelas yang memiliki keterpisahan yang rendah perlu diperhatikan
+                    """)
+                    
+                elif min_td < 1.8:
+                    st.warning("""
+                    **⚠️ Perhatian - Keterpisahan Lemah Terdeteksi**
+                    
+                    Beberapa pasangan kelas memiliki keterpisahan lemah (TD 1.0-1.8). Hasil klasifikasi mungkin masih dapat diterima, 
+                    tetapi pertimbangkan untuk:
+                    """)
+                    
+                    st.markdown("""
+                    - Menambah jumlah sampel untuk kelas yang bermasalah
+                    - Memastikan sampel lebih representatif
+                    - Melakukan validasi akurasi yang teliti di Modul 7
+                    - Atau lanjutkan ke Modul 6 jika hasil ini sudah memadai
+                    """)
+                else:
+                    st.success("""
+                    **✅ Keterpisahan Baik**
+                    
+                    Semua pasangan kelas memiliki keterpisahan yang baik (TD ≥ 1.8). Data latih Anda berkualitas tinggi!
+                    Anda dapat melanjutkan ke Modul 6
+                    """)
+            
+            # Add visual guide
+            st.markdown("---")
+            st.markdown("### 📊 Visualisasi untuk Analisis Lebih Lanjut")
+            st.info("""
+            Gunakan tab **Visualisasi** di bawah untuk melihat secara visual bagaimana kelas-kelas Anda terpisah:
+            - **Histogram**: Lihat distribusi nilai spektral setiap kelas
+            - **Box Plot**: Bandingkan rentang nilai spektral antar kelas
+            - **Scatter Plot 2D**: Lihat tumpang tindih antar kelas dalam ruang 2 dimensi
+            - **Scatter Plot 3D**: Eksplorasi keterpisahan dalam ruang 3 dimensi
+            
+            Visualisasi ini akan membantu Anda memahami mengapa beberapa kelas sulit dipisahkan.
+            """)
+            
         else:
             st.write("Tidak ada data pasangan kelas yang rancu.")            
 

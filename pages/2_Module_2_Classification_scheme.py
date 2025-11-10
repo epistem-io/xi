@@ -87,20 +87,62 @@ sync_manager_from_session()
 
 # Add navigation sidebar
 Navbar()
-
-# Page header
-st.title("Menentukan Skema Klasifikasi Peta Tutupan/Penggunaan Lahan")
+#Page header
+st.markdown("""
+<style>
+.gradient-title {
+  font-size: 2.5em;
+  font-weight: 700;
+  text-align: left;
+  background: linear-gradient(90deg, var(--pink), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 0.4em;
+}
+</style>
+<h1 class="gradient-title">Menentukan Skema Klasifikasi<br>Peta Tutupan/Penggunaan Lahan</h1>
+""", unsafe_allow_html=True)
 st.divider()
 
 st.markdown("""
-Dalam modul ini, Anda perlu menentukan skema klasifikasi yang akan digunakan untuk membuat peta tutupan lahan.  
-Terdapat tiga metode yang didukung dalam platform ini:
-- **Input Manual**: Tambahkan kelas satu per satu  
-- **Unggah CSV**: Impor dari berkas klasifikasi yang sudah ada  
-- **Skema Bawaan**: Gunakan kelas yang berdasarkan skema RESTORE+
-""")
+<style>
+.check-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.check-icon {
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, var(--pink), var(--purple));
+  -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24"><path d="M9 16.172l-3.586-3.586-1.414 1.414L9 19 20 8l-1.414-1.414z"/></svg>') no-repeat center;
+  mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24"><path d="M9 16.172l-3.586-3.586-1.414 1.414L9 19 20 8l-1.414-1.414z"/></svg>') no-repeat center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  flex-shrink: 0;
+}
+</style>
+<p>Dalam modul ini, Anda perlu menentukan skema klasifikasi yang akan digunakan untuk membuat peta tutupan lahan.</p>
+<p>Terdapat tiga metode yang didukung dalam platform ini:</p>
+<div class="check-item">
+  <div class="check-icon"></div>
+  <p><strong>Input Manual</strong>:<br>Tambahkan kelas satu per satu</p>
+</div>
+<div class="check-item">
+  <div class="check-icon"></div>
+  <p><strong>Unggah CSV</strong>:<br>Impor dari berkas klasifikasi yang sudah ada</p>
+</div>
+<div class="check-item">
+  <div class="check-icon"></div>
+  <p><strong>Skema Bawaan</strong>:<br>Gunakan kelas yang berdasarkan skema RESTORE+</p>
+</div>
+""", unsafe_allow_html=True)
 
 st.markdown("---")
+
 
 #Tab layout for different classification definition
 tab1, tab2, tab3 = st.tabs(["➕ Input Manual", "📤 Unggah CSV", "📋 Skema Bawaan"])

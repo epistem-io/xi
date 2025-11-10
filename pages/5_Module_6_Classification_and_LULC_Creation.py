@@ -362,7 +362,7 @@ with tab2:
     if st.session_state.extracted_training_data is None:
         st.warning("⚠️ Lakukan ekstraksi nilai piksel melalui 'ekstraksi fitur'")
     else:
-        st.success("✅ Proses ekstraksi nilai piksel tersedia. Proses klasifikasi dapat dilakukan")
+        st.success("✅ Proses ekstraksi nilai piksel selesai. Proses pelatihan model dapat dilakukan")
         
         #Model Config with explanations
         st.subheader("⚙️ Pengaturan Model Klasifikasi")
@@ -377,17 +377,22 @@ with tab2:
             st.markdown("1. Jumlah Pohon Keputusan (number of trees)")
             st.markdown("2. Jumlah variabel yang dipertimbangkan saat pengambilan keputusan (variable_per_split)")
             st.markdown("3. Jumlah sampel yang dipertimbangkan untuk memecah sebuah daun dalam pohon keputusan (min leaf population)")
-        st.markdown("0")
         
         #Create tabs for preset value, or manuall setting
-        config_tab1, config_tab2 = st.tabs(["Pengaturan Umum", "⚙️ Pengaturan Lebih Lanjut"])
+        config_tab1, config_tab2 = st.tabs(["Pengaturan Umum", "Pengaturan manual"])
+        
+        # Initialize default values before tabs
+        ntrees = 150
+        v_split = None
+        min_leaf = 1
+        use_auto_vsplit = True
+        
         #Preset parameter value
         with config_tab1:
-            st.markdown("0")
             col1, col2 = st.columns(2)
-            
+            st.markdown("Pengaturan umum yang diterapkan untuk kajian penginderaan jauh")
             with col1:
-                st.markdown("Jumlah pohon keputusan")
+                st.markdown("### Jumlah Pohon Keputusan")
                 st.markdown("*Berapa banyak 'pendapat ahli' diperlukan?*")
                 
                 #Predefined preset (?)
@@ -397,7 +402,7 @@ with tab2:
                      "Balanced: 150 trees (Ideal untuk klasifikasi penutup lahan dengan kompleksitas menengah)", 
                      "Complex: 300 trees (Ideal untuk klasifikasi penutup lahan dengan kompleksitas tinggi) "],
                     index=1,
-                    help="0"
+                    help="Semakin banyak jumlah pohon, akurasi dapat meningkat, namun beban komputasi yang semakin tinggi"
                 )
                 #translate the preset to the machine requirement
                 if "Stable" in tree_preset:
@@ -406,37 +411,35 @@ with tab2:
                     ntrees = 150                   
                 else:
                     ntrees = 300
-            
+            #Other option beside number of trees
             with col2:
-                st.markdown("Pengaruran lainnya")
-                st.markdown("Parameter lainnya menggunakan nilai bawaan")
-                
+                st.markdown("### Pengaturan lainnya")
+                st.markdown("*Parameter lainnya menggunakan nilai bawaan (default)*")
+                #default variable persplit
                 use_auto_vsplit = True
                 v_split = None
+                #default min leaf
                 min_leaf = 1
                 
                 st.success("✅ *Variables per split*: default (akar dari jumlah total variabel)")
                 st.success("✅ *Minimum samples*: 1 (default)")
-                st.info("💡 Nilai ini umumnya dapat menghasilkan model yang bagus")
-        
+        #advance option, used for manually specified parameter
         with config_tab2:
-            st.markdown("0")
-            
             col1, col2, col3 = st.columns(3)
             
             with col1:
-                st.markdown("### 🌲 Number of Trees")
+                st.markdown("### Number of Trees")
                 ntrees = st.number_input(
                     "Number of Trees",
                     min_value=10,
                     max_value=900,
                     value=100,
                     step=10,
-                    help="0"
+                    help="Jumlah pohon keputusan"
                 )
                 
             with col2:
-                st.markdown("Jumlah variable per split")
+                st.markdown("### Variable per split")
                 use_auto_vsplit = st.checkbox(
                     "Menggunakan nilai bawaan",
                     value=True,
@@ -453,20 +456,19 @@ with tab2:
                     )
                 else:
                     v_split = None
-                    st.success("✅ Menggunakna √(dari jumlah variabel/prediktor)")
+                    st.success("✅ Menggunakan √(dari jumlah variabel/prediktor)")
             
             with col3:
-                st.markdown("Jumlah minimum sampel daun?")
+                st.markdown("### Minimum Sample Leaf")
                 min_leaf = st.number_input(
                     "Minimum Samples per Leaf",
                     min_value=1,
                     max_value=100,
                     value=1,
-
-                    help= "Jumlah minimal sampel yang dibutuhkan untuk tiap leaf node"
+                    help= "Jumlah minimal sampel yang dipertimbangkan saat mengambil keputusan"
                 )
                 
-        # Ready to train section
+        #Ready to train section
         st.markdown("---")
         
         # Show current configuration summary
@@ -482,7 +484,7 @@ with tab2:
             with col3:
                 st.metric("🍃 Min Samples per Leaf", min_leaf)
         
-        # The big classification button
+        # classification button
         if st.button(" Latih Model Klasifikasi", type="primary", use_container_width=True):
             # Progress tracking
             progress_bar = st.progress(0)
@@ -538,7 +540,7 @@ with tab2:
                 st.error("❌ **Ups! Terjadi kesalahan saat pelatihan.**")
                 st.error("**Detail kesalahan:** " + str(e))
                 
-                with st.expander("🔧 Detail Teknis (untuk pemecahan masalah)"):
+                with st.expander("🔧 Detail Teknis"):
                     import traceback
                     st.code(traceback.format_exc())
 # ==================== TAB 3 Summary Result ====================
@@ -637,7 +639,7 @@ with tab3:
             st.plotly_chart(fig, use_container_width=True)
         
         with col2:
-            st.markdown("0")
+            st.markdown("**Kanal yang paling penting:**")
             for i, row in importance_df.head(5).iterrows():
                 st.write(f"{i+1}. {row['Band']}")
             
@@ -867,20 +869,20 @@ with tab3:
             st.plotly_chart(fig, use_container_width=True)
             
             # Add interpretation help
-            with st.expander("📖 How to Read the Confusion Matrix"):
+            with st.expander("📖 Cara membaca matriks kesalahan (error matrix)"):
                 st.markdown("""
-                **Understanding the Confusion Matrix:**
-                - **Rows (Actual)**: True class labels from your test data
-                - **Columns (Predicted)**: Classes predicted by your model
-                - **Diagonal values**: Correct predictions (higher is better)
-                - **Off-diagonal values**: Misclassifications (lower is better)
+                **Memahami matriks kesalahan:**
+                - **Baris (Actual)**: Label kelas sebenarnya dari data pengujian Anda
+                - **Kolom (Predicted)**: Kelas yang diprediksi oleh model Anda
+                - **Nilai diagonal**: Prediksi yang benar (semakin tinggi semakin baik)
+                - **Nilai di luar diagonal**: Kesalahan klasifikasi (semakin rendah semakin baik)
                 
-                **Perfect Classification**: All values would be on the diagonal with zeros elsewhere.
+                **Klasifikasi Sempurna**: Semua nilai akan berada di diagonal dengan nilai nol di tempat lain.
                 
-                **Common Issues to Look For:**
-                - High off-diagonal values indicate confusion between specific classes
-                - Consistently low values in a row suggest the model struggles to detect that class
-                - Consistently high values in a column suggest the model over-predicts that class
+                **Masalah Umum yang Perlu Diperhatikan:**
+                - Nilai yang tinggi di luar diagonal menunjukkan kebingungan antara kelas tertentu
+                - Nilai yang rendah dalam satu baris menunjukkan model kesulitan mendeteksi kelas tersebut
+                - Nilai yang tinggi dalam satu kolom menunjukkan model terlalu sering memprediksi kelas tersebut
                 """)
             
             # Add summary statistics
@@ -906,7 +908,7 @@ with tab3:
             
             with col2:
                 # Show most confused classes
-                st.markdown("**Most Common Misclassifications:**")
+                st.markdown("**Kesalahan klasifikasi yang paling umum:**")
                 misclass_data = []
                 
                 for i in range(len(cm_array)):

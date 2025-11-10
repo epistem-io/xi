@@ -10,7 +10,6 @@ import os
 import geopandas as gpd
 import plotly.express as px
 from ui_helper import show_footer, show_header
-initialize_earth_engine()
 
 #Page configuration
 st.set_page_config(
@@ -45,23 +44,35 @@ manager = get_accuracy_manager()
 
 # Add navigation sidebar
 Navbar()
-
 # Page header
-st.title("Penilaian Akurasi Tematik")
+st.markdown("""
+<style>
+.gradient-title {
+  font-size: 2.5em;
+  font-weight: 700;
+  text-align: left;
+  background: linear-gradient(90deg, var(--pink), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 0.4em;
+}
+</style>
+<h1 class="gradient-title">Penilaian Akurasi Tematik</h1>
+""", unsafe_allow_html=True)
 st.divider()
 
 st.markdown("""
 Evaluasi akurasi tematik dari klasifikasi tutupan lahan Anda dari Modul 6 menggunakan data validasi independen. 
 Untuk menjalankan modul ini Anda memerlukan data referensi lapangan yang berisi ID kelas dan nama kelas serupa dengan ROI
 Akurasi peta tutupan lahan dievaluasi menggunakan matriks konfusi, dengan metrik kunci berikut
-
 - **Akurasi Keseluruhan** dengan interval kepercayaan
 - **Koefisien Kappa** untuk penilaian kesepakatan  
 - **Skor F1** untuk kinerja tingkat kelas
 """)
 
 st.markdown("---")
-
 #This module wont run if classification result from module 6 is not avaliable
 def check_prerequisites():
     """Check if required data from previous modules is available"""
