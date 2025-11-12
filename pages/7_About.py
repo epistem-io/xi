@@ -66,7 +66,7 @@ with st.expander("📖 Pelajari Lebih Lanjut Tentang Kegiatan Epistem"):
 st.markdown("---") 
 
 # Developers
-st.markdown('<div class="module-header">👥 Tim Pengembang</div>', unsafe_allow_html=True)
+st.markdown('<div class="module-header">Tim Pengembang</div>', unsafe_allow_html=True)
 
 with st.container():
     st.markdown("""
@@ -84,7 +84,7 @@ with st.container():
 st.markdown("---") 
 
 # Platform architecture
-st.markdown('<div class="module-header">🏗️ Arsitektur</div>', unsafe_allow_html=True)
+st.markdown('<div class="module-header">Arsitektur</div>', unsafe_allow_html=True)
 
 with st.container():
     st.markdown("""
