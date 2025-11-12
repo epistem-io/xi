@@ -71,35 +71,15 @@ st.markdown('<div class="module-header">👥 Tim Pengembang</div>', unsafe_allow
 with st.container():
     st.markdown("""
     <div class="epistemx-card">
-        <p>Algoritma backend Epistem-X dikembangkan dan dipelihara secara kolaboratif oleh tim berikut. 
+        <p>Algoritma backend Epistem-X dikembangkan dan dikelola secara kolaboratif. 
         Kontribusi mencakup pengembangan algoritma pemrosesan citra dan klasifikasi tutupan/penggunaan lahan
         serta penyediaan prototipe antarmuka untuk pengguna.</p>
+        <p>Epistem-X dibangun oleh banyak kontributor. Lihat daftar lengkap kontributor di 
+        <a href="https://github.com/epistem-io" target="_blank">https://github.com/epistem-io</a></p>
     </div>
     """, unsafe_allow_html=True)
 
-developers = [
-    {"name": "Agil Akbar Fahrezi ", "institution": "CIFOR-ICRAF"},
-    {"name": "Andree Ekadinata", "institution": "CIFOR-ICRAF"},
-    {"name": "Arga Pandiwijaya", "institution": "CIFOR-ICRAF"},
-    {"name": "Dhian Rachmawati", "institution": "CIFOR-ICRAF"},
-    {"name": "Dony Indiarto", "institution": "CIFOR-ICRAF"},
-    {"name": "Faza Iza Mahezs", "institution": "CIFOR-ICRAF"},
-    {"name": "Hikmah Fajar Assidiq", "institution": "CIFOR-ICRAF"},
-    {"name": "Muhammad Azizy", "institution": "CIFOR-ICRAF"},
-    {"name": "Riky Mulya Hilmansyah", "institution": "CIFOR-ICRAF"},
-    {"name": "Yusi Septriandi", "institution": "CIFOR-ICRAF"},
-]
 
-cols = st.columns(3)
-
-for idx, dev in enumerate(developers):
-    with cols[idx % 3]:
-        st.markdown(f"""
-        <div class="epistemx-card" style="text-align: center !important; padding: 20px; margin-bottom: 15px;">
-            <h3 style="margin-bottom: 5px; text-align: center !important; width: 100%;">{dev['name']}</h3>
-            <p style="color: #666; font-size: 0.9em; margin-top: 5px; text-align: center !important; width: 100%;">{dev['institution']}</p>
-        </div>
-        """, unsafe_allow_html=True)
 
 st.markdown("---") 
 
