@@ -4,7 +4,7 @@ from epistemx import auto_initialize
 from modules.nav import Navbar
 import os
 import tempfile
-from ui_helper import show_footer, show_header
+from ui_helper import show_footer, show_header, show_hero_banner
 
 st.set_page_config(
     page_title="Epistem-X Beranda",
@@ -46,35 +46,41 @@ if 'ee_initialized' not in st.session_state:
 # Add navigation sidebar
 Navbar()
 
-st.markdown("""
-<div class="main-header">
-    <h2>Selamat Datang di</h2>
-    <h1>Platform Pemetaan Tutupan Lahan<br>EpistemX</h1>
-    <p>Pemrosesan & Analisis Data Observasi Bumi Lanjutan.<br>Platform multi-halaman ini mendemonstrasikan kemampuan pemetaan tutupan lahan EpistemX yang canggih, 
-    dengan fitur pemrosesan citra Landsat otomatis untuk area minat Anda.</p>
-</div>
-""", unsafe_allow_html=True)
+# Display hero banner with title overlay
+show_hero_banner()
 
-st.markdown('<div class="module-header">📋 Instruksi</div>', unsafe_allow_html=True)
+st.markdown('<div class="module-header">📋 Modul - Modul Epistem</div>', unsafe_allow_html=True)
 
 st.markdown("""
 <div class="epistemx-card">
     <div class="steps">
         <div class="step">
-            <strong>1. Tentukan Area Minat:</strong>
-            <p>Gambar persegi panjang di peta atau unggah shapefile (zip)</p>
+            <strong>1. Modul 1: Buat Gabungan Citra</strong>
+            <p>Modul ini menghasilkan citra satelit yang siap pakai dengan kualitas yang terbaik</p>
         </div>
         <div class="step">
-            <strong>2. Tentukan Tanggal Akuisisi:</strong>
-            <p>Tentukan tahun - citra akan difilter dari 1 Januari hingga 31 Desember</p>
+            <strong>2. Modul 2: Tentukan Skema Klasifikasi</strong>
+            <p>Penentuan target kelas - kelas penutup lahan yang akan dipetakan melalui platform Epistem</p>
         </div>
         <div class="step">
-            <strong>3. Konfigurasi Parameter:</strong>
-            <p>Tentukan persentase tutupan awan dan tipe sensor (Landsat 5 TM - Landsat 9 OLI2)</p>
+            <strong>3. Modul 3: Penentuan Data Latih</strong>
+            <p>Membuat data untuk melatih komputer dalam melakukan pemetaan penutup lahan </p>
         </div>
         <div class="step">
-            <strong>4. Buat Mozaik:</strong>
-            <p>Klik jalankan untuk membuat mozaik citra satelit Anda</p>
+            <strong>4. Modul 4: Analisis Area Sampel </strong>
+            <p>Ketahui kualitas data anda melalui analisis keterpisahan</p>
+        </div>
+        <div class="step step-disabled">
+            <strong>5. Modul 5: Tambahkan kovariat multisumber </strong>
+            <p>🚧 Dalam pengembangan</p>
+        </div>
+            <div class="step">
+            <strong>6. Modul 6: Buat Peta Penutup Lahan </strong>
+            <p>Latih algoritma klasifikasi berbasis mesin, untuk menghasilkan peta penutup lahan anda</p>
+        </div>
+        <div class="step">
+            <strong>7. Modul 7: Uji Akurasi Petamu </strong>
+            <p>Bandingkan peta yang kamu hasilkan dengan data referensi</p>
         </div>
     </div>
 </div>
@@ -86,8 +92,10 @@ if st.session_state.get('ee_initialized', False):
 else:
     st.markdown('<div class="warning-message">⚠️ Earth Engine Belum Diinisialisasi - Mohon periksa autentikasi</div>', unsafe_allow_html=True)
 
-m = leafmap.Map(center = [-5.003394, 113.598633], zoom = 5)
+st.markdown('<div class="map-container-fullwidth">', unsafe_allow_html=True)
+m = leafmap.Map(center=[-2.5, 118.0], zoom=5)
 m.add_basemap("OpenTopoMap")
 m.to_streamlit(height=500)
+st.markdown('</div>', unsafe_allow_html=True)
 
 show_footer()

@@ -55,6 +55,89 @@ section[data-testid="stExpandSidebarButton"] {{
 </div>
 """, unsafe_allow_html=True)
 
+def show_hero_banner():
+    """Display hero section with banner as backdrop"""
+    banner_path = os.path.join(os.path.dirname(__file__), "logos", "banner.png")
+    if os.path.exists(banner_path):
+        img_base64 = get_base64_of_bin_file(banner_path)
+        st.markdown(f"""
+<style>
+.hero-banner {{
+  position: relative;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  background-image: url('data:image/png;base64,{img_base64}');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}}
+
+.hero-overlay {{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(1px);
+}}
+
+.hero-content {{
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 60px 40px;
+  color: white;
+}}
+
+.hero-content h2 {{
+  font-size: 1.8em;
+  font-weight: 400;
+  margin-bottom: 15px;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+  letter-spacing: 0.5px;
+  color: white;
+}}
+
+.hero-content h1 {{
+  font-size: 3.5em;
+  font-weight: 700;
+  margin-bottom: 25px;
+  line-height: 1.2;
+  text-shadow: 3px 3px 12px rgba(0, 0, 0, 0.8);
+  color: white;
+}}
+
+.hero-content p {{
+  font-size: 1.2em;
+  line-height: 1.6;
+  max-width: 800px;
+  margin: 0 auto;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.7);
+  color: white;
+  opacity: 0.95;
+}}
+</style>
+
+<div class="hero-banner">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <h2>Selamat Datang di</h2>
+    <h1>Platform Pemetaan Tutupan Lahan<br>EpistemX</h1>
+    <p>Teknologi pemetaan untuk menjawab kebutuhan data spasial berkualitas dalam mendukung upaya pencegahan deforestasi dan restorasi lanskap.<br>
+    Dirancang dengan sistem modular dan berakar kuat terhadap keilmuan dan perkembangan teknologi, platform ini diharapkan dapat memberikan fasilitas bagi seluruh kalangan pengguna.</p>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+    else:
+        st.warning("Banner logo not found")
+
 
 
 # def show_footer():
@@ -118,7 +201,7 @@ def show_footer():
             {logo_html}
             <p>© 2025 <strong>EpistemX</strong> • Designed by Azizy</p>
             <div class="footer-links">
-                <a href="https://github.com/mhmmdazizy" target="_blank" class="footer-icon">{github_icon}</a>
+                <a href="https://github.com/epistem-io/EpistemXBackend" target="_blank" class="footer-icon">{github_icon}</a>
                 <a href="mailto:hello@epistemx.io" class="footer-icon">{email_icon}</a>
             </div>
         </div>

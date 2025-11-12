@@ -216,6 +216,31 @@ section[data-testid="stSidebar"] > div {
   color: var(--pink);
 }
 
+/* ===== Disabled/Under Development Step ===== */
+.step-disabled {
+  opacity: 0.5;
+  background: #f5f5f5 !important;
+  cursor: not-allowed !important;
+}
+
+.step-disabled strong {
+  color: #999 !important;
+}
+
+.step-disabled p {
+  color: #999 !important;
+}
+
+.step-disabled:hover {
+  transform: none !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06) !important;
+  background: #f5f5f5 !important;
+}
+
+.step-disabled:hover strong {
+  color: #999 !important;
+}
+
 /* ===== Module Header ===== */
 .module-header {
   display: inline-block; /* biar lebarnya mengikuti teks */
@@ -416,4 +441,17 @@ div[data-testid="stAlert"] > div:first-child {
   text-align: center !important;
   width: fit-content !important;
   margin: 0 auto !important;
+}
+
+/* ===== Full-width Map Container ===== */
+.map-container-fullwidth {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+.map-container-fullwidth iframe,
+.map-container-fullwidth .leaflet-container {
+  border-radius: 0 !important;
 }
