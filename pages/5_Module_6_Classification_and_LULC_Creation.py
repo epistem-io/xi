@@ -998,79 +998,6 @@ with tab4:
                         'palette': palette
                     }
                     
-                    # Display legend before the map
-                    st.subheader("🗺️ Legenda Klasifikasi")
-                    
-                    # Create legend in columns for better layout
-                    num_cols = min(4, len(unique_classes))  # Max 4 columns
-                    cols = st.columns(num_cols)
-                    
-                    for idx, class_id in enumerate(unique_classes):
-                        with cols[idx % num_cols]:
-                            class_name = class_info[class_id]['name']
-                            color = class_info[class_id]['color']
-                            
-                            # Create colored legend item
-                            st.markdown(
-                                f"""
-                                <div style='display: flex; align-items: center; margin-bottom: 8px;'>
-                                    <div style='background-color: {color}; 
-                                                width: 20px; height: 20px; 
-                                                border: 1px solid #ccc; 
-                                                margin-right: 8px; 
-                                                border-radius: 3px;'></div>
-                                    <span style='font-size: 14px;'><strong>{class_id}:</strong> {class_name}</span>
-                                </div>
-                                """,
-                                unsafe_allow_html=True
-                            )
-                    
-                    # Option to customize colors (expandable section)
-                    with st.expander("🎨 Customize Map Colors", expanded=False):
-                        st.markdown("Adjust colors for each land cover class:")
-                        
-                        # Create color pickers for each class
-                        color_cols = st.columns(min(3, len(unique_classes)))
-                        updated_colors = {}
-                        
-                        for idx, class_id in enumerate(unique_classes):
-                            with color_cols[idx % len(color_cols)]:
-                                class_name = class_info[class_id]['name']
-                                current_color = class_info[class_id]['color']
-                                
-                                # Color picker
-                                new_color = st.color_picker(
-                                    f"Class {class_id}: {class_name}",
-                                    value=current_color,
-                                    key=f"viz_color_{class_id}"
-                                )
-                                updated_colors[class_id] = new_color
-                        
-                        # Update colors if changed
-                        if st.button("🔄 Apply Color Changes"):
-                            for class_id in unique_classes:
-                                class_info[class_id]['color'] = updated_colors[class_id]
-                            palette = [class_info[cls]['color'] for cls in unique_classes]
-                            vis_params['palette'] = palette
-                            st.success("Colors updated! Map will refresh automatically.")
-                            st.rerun()
-                        
-                        # Reset to Module 2 colors button
-                        if 'lulc_classes_final' in st.session_state:
-                            if st.button("🔄 Reset to Module 2 Colors"):
-                                # Reload colors from Module 2
-                                lulc_classes = st.session_state['lulc_classes_final']
-                                for cls in lulc_classes:
-                                    class_id = cls.get('ID', cls.get('Class ID'))
-                                    original_color = cls.get('Color Code', cls.get('Color', '#228B22'))
-                                    class_info[class_id]['color'] = original_color
-                                palette = [class_info[cls]['color'] for cls in unique_classes]
-                                vis_params['palette'] = palette
-                                st.success("Colors reset to Module 2 scheme!")
-                                st.rerun()
-                    
-                    st.markdown("---")
-                    
                     # Create map
                     if 'train_final' in st.session_state:
                         gdf = st.session_state['train_final']
@@ -1101,9 +1028,9 @@ with tab4:
                     # Add map information
                     st.info("""
                     **Data yang ditampilkan di kanvas peta:**
-                    - 🗺️ **Land Cover Classification**: Hasil klasifikasi anda
-                    - 🛰️ **Image Composite**: Citra satelit yang digunakan untuk proses klasifikasi (aktifkan melalui kendali layar kanan atas kanvas peta)
-                    - 📍 **Training Data**: data sampel yang digunakan untuk melatih model (aktifkan melalui kendali layar kanan atas kanvas peta)
+                    - **Land Cover Classification**: Peta hasil klasifikasi anda
+                    - **Image Composite**: Citra satelit yang digunakan untuk proses klasifikasi (aktifkan melalui kendali layar kanan atas kanvas peta)
+                    - **Training Data**: data sampel yang digunakan untuk melatih model (aktifkan melalui kendali layar kanan atas kanvas peta)
                     """)
                     
                 else:
@@ -1120,11 +1047,12 @@ with tab4:
 with tab5:
     st.header("Simpan Hasil Klasifikasi")
     st.markdown("""
-    Pada bagian ini anda dapat menyimpan hasil klasifikasi melalui platform google drive, kemudian mengunduhnya di komputer pribadi anda.
-    Saat ini platform EPISTEM belum mendukung proses unduh data secara langsung. Hal - Hal yang perlu diperhatikan dalam menyimpan hasil klasifikasi adalah sebagai berikut:
+    Pada bagian ini anda dapat menyimpan hasil klasifikasi dengan dua pilihan:
     
-    1. Silahkan beri nama file hasil klasifikasi yang dapat anda kenali dengan mudah. Format yang disarankan: LULC_Area_Studi_Tahun_citra, contoh: LULC_Sumsel_2024_Landsat8
-    2. Untuk memantau proses penyimpanan hasil klasifikasi, tekan tombol refresh
+    1. **Unduh Langsung**: Unduh berkas GeoTIFF langsung ke komputer Anda (untuk area kecil hingga menengah)
+    2. **Google Cloud Storage**: Untuk area yang lebih besar atau jika unduhan langsung gagal
+    
+    **Tips penamaan berkas:** Gunakan format yang mudah dikenali seperti LULC_Area_Studi_Tahun_citra, contoh: LULC_Sumsel_2024_Landsat8
     """)
     
     #check if the classification result is complete
@@ -1133,8 +1061,13 @@ with tab5:
     else:
         st.success("✅ Klasifikasi selesai!")
         
-        #Export section
-        st.subheader("Simpan Hasil Klasifikasi Melalui Google Drive")
+        # Export destination selection
+        export_destination = st.radio(
+            "Pilih tujuan ekspor:",
+            ["Unduh Langsung", "Google Cloud Storage"],
+            index=0,
+            help="Pilih lokasi untuk menyimpan hasil klasifikasi"
+        )
         
         #Create export settings
         with st.expander("Pengaturan Penyimpanan", expanded=True):
@@ -1146,17 +1079,38 @@ with tab5:
             #Default classification name
             default_name = f"LULC_{sensor}_{start_date}_{end_date}"
             export_name = st.text_input(
-                "Export Filename:",
+                "Nama berkas ekspor:",
                 value=default_name,
                 help="Hasil akan disimpan dalam format GeoTIFF (.tif)"
             )
             
-            #Hardcoded folder location for classification exports
-            #PROBLEM: EXPORT AUTOMATICALLY STORED IN ACCOUNT IN WHICH GOOGLE EARTH ENGINE ACCOUNT IS INTIALIZED
-            drive_folder = "EPISTEM/EPISTEMX_Classification_Export"
-            drive_url = "https://drive.google.com/drive/folders/1ccYCLEy4_T-GEtZIvWw9LFeCPr_afkrd?usp=drive_link"
+            # Export destination specific settings
+            if export_destination == "Unduh Langsung":
+                st.info("Berkas akan diunduh langsung ke komputer Anda dalam format GeoTIFF")
+                st.warning("Catatan: Unduhan langsung dibatasi maksimal 32 MB. Untuk area yang lebih besar, gunakan Google Cloud Storage.")
             
-            st.info(f"Files will be exported to [EPISTEM/EPISTEMX_Classification_Export folder]({drive_url})")
+            else:  # Google Cloud Storage
+                st.subheader("Pengaturan Google Cloud Storage")
+                
+                # Nama GCS Bucket
+                gcs_bucket = st.text_input(
+                    "Nama GCS Bucket:",
+                    value="epistemx",
+                    placeholder="epistemx",
+                    help="Masukkan nama bucket Google Cloud Storage Anda"
+                )
+                
+                # Awalan jalur file GCS
+                gcs_path_prefix = st.text_input(
+                    "Awalan Jalur File (opsional):",
+                    value="classification_exports/",
+                    help="Awalan jalur opsional di dalam bucket (misal: 'classification_exports/' atau 'data/lulc/')"
+                )
+                
+                if not gcs_bucket:
+                    st.warning("⚠️ Nama GCS Bucket wajib diisi untuk ekspor ke Cloud Storage")
+                else:
+                    st.info(f"Berkas akan diekspor ke: gs://{gcs_bucket}/{gcs_path_prefix}{export_name}.tif")
             
             #Coordinate Reference System (CRS)
             crs_options = {
@@ -1171,9 +1125,9 @@ with tab5:
             
             if crs_choice == 'Custom EPSG':
                 custom_epsg = st.text_input(
-                    "Enter EPSG Code:",
+                    "Masukkan EPSG Code:",
                     value="4326",
-                    help="Example: 32648 (UTM Zone 48N)"
+                    help="Contoh: 32748 (UTM Zona 48S)"
                 )
                 export_crs = f"EPSG:{custom_epsg}"
             else:
@@ -1188,14 +1142,17 @@ with tab5:
                 step=10
             )
             
-            #Export format, hardcoded for classification formar
-            export_format = "GeoTIFF (Integer)"
-            st.info("📄 Export format: GeoTIFF (Integer)")
-            
             # Button to start export
-            if st.button("Mulai menyimpan hasil klasifikasi ke google drive", type="primary"):
+            export_button_text = f"Mulai ekspor ke {export_destination}"
+            export_disabled = False
+            
+            # Disable button if GCS is selected but bucket name is missing
+            if export_destination == "Google Cloud Storage" and not gcs_bucket:
+                export_disabled = True
+            
+            if st.button(export_button_text, type="primary", disabled=export_disabled):
                 try:
-                    with st.spinner("Menyiapkan proses penyimpanan..."):
+                    with st.spinner("Menyiapkan tugas ekspor…"):
                         #Use the classification result from session state
                         export_image = st.session_state.classification_result
                         
@@ -1216,63 +1173,127 @@ with tab5:
                             try:
                                 export_region = aoi_obj.geometry()
                             except:
-                                raise ValueError(f"Cannot extract geometry from AOI object of type: {type(aoi_obj)}")
+                                raise ValueError(f"Tidak dapat mengekstrak geometri dari objek wilayah kajian bertipe: {type(aoi_obj)}")
                         
-                        #Set format options for integer classification maps
-                        format_options = {"cloudOptimized": True, "noData": 0}
-                        
-                        #Summarize the export parameters
-                        export_params = {
-                            "image": export_image,
-                            "description": export_name.replace(" ", "_"),  
-                            "folder": drive_folder,
-                            "fileNamePrefix": export_name,
-                            "scale": scale,
-                            "crs": export_crs,
-                            "maxPixels": 1e13,
-                            "fileFormat": "GeoTIFF",
-                            "formatOptions": format_options,
-                            "region": export_region
-                        }
-                        
-                        # Pass the parameters to earth engine export
-                        task = ee.batch.Export.image.toDrive(**export_params)
-                        task.start()
-                        
-                        # Store task info in session state for monitoring
-                        task_info = {
-                            'id': task.id,
-                            'name': export_name,
-                            'folder': drive_folder,
-                            'crs': export_crs,
-                            'scale': scale,
-                            'format': export_format,
-                            'type': 'Classification',
-                            'start_time': datetime.datetime.now(),
-                            'last_progress': 0,
-                            'last_update': datetime.datetime.now()
-                        }
-                        
-                        # Append to export tasks list
-                        st.session_state.export_tasks.append(task_info)
-                        
-                        st.success(f"✅ Classification export task '{export_name}' submitted successfully!")
-                        st.info(f"Task ID: {task.id}")
-                        st.markdown(f"""
-                        **Export Details:**
-                        - File location: My Drive/{drive_folder}/{export_name}.tif
-                        - CRS: {export_crs}
-                        - Resolution: {scale}m
-                        - Format: {export_format}
-                        
-                        Pantau proses penyimpanan data di [Earth Engine Task Manager](https://code.earthengine.google.com/tasks) atau gunakan monitor dibawah.
-                        """)
+                        # Configure export parameters based on destination
+                        if export_destination == "Unduh Langsung":
+                            # Use getDownloadURL for direct download
+                            try:
+                                download_params = {
+                                    "name": export_name,
+                                    "crs": export_crs,
+                                    "scale": scale,
+                                    "region": export_region,
+                                    "fileFormat": "GEO_TIFF",
+                                    "formatOptions": {"cloudOptimized": True, "noData": 0}
+                                }
+                                
+                                # Get download URL
+                                download_url = export_image.getDownloadURL(download_params)
+                                
+                                if download_url:
+                                    st.success("✅ URL unduhan berhasil dibuat!")
+                                    st.markdown(f"""
+                                    **Detail Unduhan:**
+                                    - Format: GeoTIFF (Integer)
+                                    - CRS: {export_crs}
+                                    - Resolusi: {scale} meter
+                                    - Nama berkas: {export_name}.tif
+                                    """)
+                                    
+                                    # Create download link with button styling
+                                    st.markdown(f"""
+                                    <div style="margin: 1rem 0;">
+                                        <a href="{download_url}" download="{export_name}.tif" target="_blank" style="text-decoration: none;">
+                                            <div style="
+                                                background-color: #ff4b4b;
+                                                color: white;
+                                                padding: 0.75rem 1.5rem;
+                                                border-radius: 0.5rem;
+                                                text-align: center;
+                                                font-weight: 600;
+                                                font-size: 1rem;
+                                                cursor: pointer;
+                                                display: inline-block;
+                                                min-width: 200px;
+                                                transition: background-color 0.3s;
+                                            " onmouseover="this.style.backgroundColor='#e63946'" onmouseout="this.style.backgroundColor='#ff4b4b'">
+                                                📥 Unduh Peta Tutupan Lahan
+                                            </div>
+                                        </a>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                    
+                                    # Also provide text link as backup
+                                    st.markdown(f"**Link alternatif:** [Unduh {export_name}.tif]({download_url})")
+                                    st.info("💡 Klik tombol merah di atas untuk mengunduh berkas GeoTIFF ke komputer Anda.")
+                                    
+                                else:
+                                    st.error("❌ Gagal membuat URL unduhan. Coba kurangi area atau gunakan Google Cloud Storage.")
+                                    
+                            except Exception as download_error:
+                                st.error(f"❌ Error saat membuat unduhan: {str(download_error)}")
+                                st.info("💡 Coba kurangi area kajian atau gunakan Google Cloud Storage untuk area yang lebih besar.")
+                            
+                            # Direct download completed - no task needed
+                            
+                        else:  # Google Cloud Storage
+                            #Set format options for integer classification maps
+                            format_options = {"cloudOptimized": True, "noData": 0}
+                            
+                            #Summarize the export parameters
+                            export_params = {
+                                "image": export_image,
+                                "description": export_name.replace(" ", "_"),  
+                                "bucket": gcs_bucket,
+                                "fileNamePrefix": f"{gcs_path_prefix}{export_name}",
+                                "scale": scale,
+                                "crs": export_crs,
+                                "maxPixels": 1e13,
+                                "fileFormat": "GeoTIFF",
+                                "formatOptions": format_options,
+                                "region": export_region
+                            }
+                            
+                            # Pass the parameters to earth engine export for Cloud Storage
+                            task = ee.batch.Export.image.toCloudStorage(**export_params)
+                            task.start()
+                            
+                            # Store task info in session state for monitoring
+                            task_info = {
+                                'id': task.id,
+                                'name': export_name,
+                                'destination': export_destination,
+                                'folder': gcs_bucket,
+                                'crs': export_crs,
+                                'scale': scale,
+                                'type': 'Classification',
+                                'start_time': datetime.datetime.now(),
+                                'last_progress': 0,
+                                'last_update': datetime.datetime.now()
+                            }
+                            
+                            # Append to export tasks list
+                            st.session_state.export_tasks.append(task_info)
+                            
+                            st.success(f"✅ Tugas ekspor '{export_name}' berhasil dikirim!")
+                            st.info(f"ID Tugas: {task.id}")
+                            st.markdown(f"""
+                            **Detail Ekspor:**
+                            - Tujuan: Google Cloud Storage
+                            - Lokasi berkas: gs://{gcs_bucket}/{gcs_path_prefix}{export_name}.tif
+                            - CRS: {export_crs}
+                            - Resolusi: {scale}m
+                            - Format: GeoTIFF (Integer)
+                            
+                            Periksa progres di [Earth Engine Task Manager](https://code.earthengine.google.com/tasks) atau gunakan pemantau tugas di bawah ini.
+                            """)
                         
                 except Exception as e:
-                    st.error(f"Export failed: {str(e)}")
+                    st.error(f"Gagal mengekspor: {str(e)}")
                     st.info("Informasi Pemecahan Masalah:")
-                    st.write(f"AOI type: {type(st.session_state.get('AOI', st.session_state.get('aoi')))}")
-                    st.write(f"Classification result exists: {st.session_state.classification_result is not None}")
+                    st.write(f"Jenis wilayah kajian: {type(st.session_state.get('AOI', st.session_state.get('aoi')))}")
+                    st.write(f"Hasil klasifikasi tersedia: {st.session_state.classification_result is not None}")
         
         #Earth Engine Export Task Monitor (reuse from Module 1 logic)
         if st.session_state.export_tasks:
