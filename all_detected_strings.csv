@@ -1,0 +1,13 @@
+ID,File,Category,Line,Context,English Text,Bahasa Indonesia,Status,Full Line,Pattern
+1,home.py,Messages,32,success,Earth Engine initialized successfully!,,Needs Translation,"st.success(""Earth Engine initialized successfully!"")","st\.success\s*\(\s*[""\']([^""\']+)[""\']\s*\)"
+2,home.py,Messages,34,error,Failed to initialize Earth Engine. Please check your authentication.,,Needs Translation,"st.error(""Failed to initialize Earth Engine. Please check your authentication."")","st\.error\s*\(\s*[""\']([^""\']+)[""\']\s*\)"
+3,translate_cli.py,Other UI Text,24,unknown,Test the translation infrastructure,,Needs Translation,"parser.add_argument('--test', action='store_true', help='Test the translation infrastructure')","help\s*=\s*[""\']([^""\']+)[""\']"
+4,translate_cli.py,Other UI Text,25,unknown,Analyze a file for translatable strings,,Needs Translation,"parser.add_argument('--analyze', metavar='FILE', help='Analyze a file for translatable strings')","help\s*=\s*[""\']([^""\']+)[""\']"
+5,translate_cli.py,Other UI Text,26,unknown,Translate strings in a file,,Needs Translation,"parser.add_argument('--translate', metavar='FILE', help='Translate strings in a file')","help\s*=\s*[""\']([^""\']+)[""\']"
+6,translate_cli.py,Other UI Text,27,unknown,Validate Python file syntax,,Needs Translation,"parser.add_argument('--validate', metavar='FILE', help='Validate Python file syntax')","help\s*=\s*[""\']([^""\']+)[""\']"
+7,translate_cli.py,Other UI Text,28,unknown,Check for missing translations in files,,Needs Translation,"parser.add_argument('--check-missing', metavar='PATTERN', help='Check for missing translations in files')","help\s*=\s*[""\']([^""\']+)[""\']"
+8,translate_cli.py,Other UI Text,29,unknown,Export detected strings to CSV file,,Needs Translation,"parser.add_argument('--export-csv', metavar='PATTERN', help='Export detected strings to CSV file')","help\s*=\s*[""\']([^""\']+)[""\']"
+9,translate_cli.py,Other UI Text,30,unknown,Output file path for CSV export,,Needs Translation,"parser.add_argument('--output', metavar='FILE', help='Output file path for CSV export')","help\s*=\s*[""\']([^""\']+)[""\']"
+10,translate_cli.py,Other UI Text,31,unknown,List available backup files,,Needs Translation,"parser.add_argument('--list-backups', action='store_true', help='List available backup files')","help\s*=\s*[""\']([^""\']+)[""\']"
+11,translate_cli.py,Other UI Text,32,unknown,Restore file from backup,,Needs Translation,"parser.add_argument('--restore', nargs=2, metavar=('ORIGINAL', 'BACKUP'), help='Restore file from backup')","help\s*=\s*[""\']([^""\']+)[""\']"
+12,translate_cli.py,Other UI Text,34,unknown,Path to translation CSV file,,Needs Translation,help='Path to translation CSV file'),"help\s*=\s*[""\']([^""\']+)[""\']"

@@ -322,14 +322,27 @@ if st.button("Cari citra satelit", type="primary") and st.session_state.aoi is n
         #Get collection retrival statistic
         stats = Reflectance_Stats()
         detailed_stats = stats.get_collection_statistics(collection, compute_stats=True, print_report=True)
-        st.success(f"Tersedia {detailed_stats['total_images']} grid lembar citra.")
+        
+        # Safely get total images count with fallback
+        total_images = detailed_stats.get('total_images', 0)
+        if total_images == 0:
+            # Try alternative keys that might contain the count
+            total_images = detailed_stats.get('num_images', 0)
+            if total_images == 0:
+                # Fallback to collection size
+                try:
+                    total_images = int(collection.size().getInfo())
+                except:
+                    total_images = 0
+        
+        st.success(f"Tersedia {total_images} grid lembar citra.")
 
         #Store the metadata for export
         st.session_state.search_metadata = {
             'sensor': optical_data,
             'start_date': start_date,
             'end_date': end_date,
-            'num_images': detailed_stats['total_images']
+            'num_images': total_images
             }
         try:
             coll_size = int(collection.size().getInfo())
@@ -425,7 +438,7 @@ if st.button("Cari citra satelit", type="primary") and st.session_state.aoi is n
             st.info("Tidak ada data citra untuk ditampilkan")
     #st.subheader("Detailed Statistics") {'bands': ['RED', 'GREEN', 'BLUE'], 'min': 0, 'max': 0.3}
     #st.write(detailed_stats)
-    if detailed_stats['total_images'] > 0:
+    if total_images > 0:
         #visualization parameters
         thermal_vis = {
             'min': 286,
@@ -485,7 +498,7 @@ if st.session_state.composite is not None and st.session_state.aoi is not None:
     # Export destination selection
     export_destination = st.radio(
         "Pilih tujuan ekspor:",
-        ["Google Drive", "Google Cloud Storage"],
+        ["Unduh Langsung", "Google Cloud Storage"],
         index=0,
         help="Pilih lokasi untuk menyimpan hasil gabungan citra"
     )
@@ -500,13 +513,9 @@ if st.session_state.composite is not None and st.session_state.aoi is not None:
                 help="Hasil akan disimpan dalam format GeoTIFF (.tif)"
             )
         # Export destination specific settings
-        if export_destination == "Google Drive":
-            #Hardcoded folder location so that the export is in one location
-            #Located in My Drive/EPISTEM/EPISTEMX_Landsat_Export folder structure
-            drive_folder = "EPISTEM/EPISTEMX_Landsat_Export"  
-            drive_url = "https://drive.google.com/drive/folders/1JKwqv3q3JyQnkIEuIqTQ2hlwPmM-FQaF?usp=sharing"
-           
-            st.info(f"Berkas akan diekspor ke [EPISTEM/EPISTEMX_Landsat_Export folder]({drive_url})")
+        if export_destination == "Unduh Langsung":
+            st.info("📥 Berkas akan diunduh langsung ke komputer Anda dalam format GeoTIFF")
+            st.warning("⚠️ Catatan: Unduhan langsung dibatasi maksimal 32 MB. Untuk area yang lebih besar, gunakan Google Cloud Storage.")
         
         else:  # Google Cloud Storage
             st.subheader("Pengaturan Google Cloud Storage")
@@ -603,23 +612,66 @@ if st.session_state.composite is not None and st.session_state.aoi is not None:
                             raise ValueError(f"Tidak dapat mengekstrak geometri dari objek wilayah kajian bertipe: {type(aoi_obj)}")
                     
                     # Configure export parameters based on destination
-                    if export_destination == "Google Drive":
-                        #Summarize the export parameter from user input for Google Drive
-                        export_params = {
-                            "image": export_image,
-                            "description": export_name.replace(" ", "_"),  #Remove spaces from description
-                            "folder": drive_folder,
-                            "fileNamePrefix": export_name,
-                            "scale": scale,
-                            "crs": export_crs,
-                            "maxPixels": 1e13,
-                            "fileFormat": "GeoTIFF",
-                            "formatOptions": {"cloudOptimized": True},
-                            "region": export_region
-                        }
+                    if export_destination == "Unduh Langsung":
+                        # Use getDownloadURL for direct download
+                        try:
+                            download_params = {
+                                "name": export_name,
+                                "crs": export_crs,
+                                "scale": scale,
+                                "region": export_region,
+                                "fileFormat": "GEO_TIFF",
+                                "formatOptions": {"cloudOptimized": True}
+                            }
+                            
+                            # Get download URL
+                            download_url = export_image.getDownloadURL(download_params)
+                            
+                            if download_url:
+                                st.success("✅ URL unduhan berhasil dibuat!")
+                                st.markdown(f"""
+                                **Detail Unduhan:**
+                                - Format: GeoTIFF
+                                - CRS: {export_crs}
+                                - Resolusi: {scale} meter
+                                - Nama berkas: {export_name}.tif
+                                """)
+                                
+                                # Create download link with button styling
+                                st.markdown(f"""
+                                <div style="margin: 1rem 0;">
+                                    <a href="{download_url}" download="{export_name}.tif" target="_blank" style="text-decoration: none;">
+                                        <div style="
+                                            background-color: #ff4b4b;
+                                            color: white;
+                                            padding: 0.75rem 1.5rem;
+                                            border-radius: 0.5rem;
+                                            text-align: center;
+                                            font-weight: 600;
+                                            font-size: 1rem;
+                                            cursor: pointer;
+                                            display: inline-block;
+                                            min-width: 200px;
+                                            transition: background-color 0.3s;
+                                        " onmouseover="this.style.backgroundColor='#e63946'" onmouseout="this.style.backgroundColor='#ff4b4b'">
+                                            📥 Unduh GeoTIFF
+                                        </div>
+                                    </a>
+                                </div>
+                                """, unsafe_allow_html=True)
+                                
+                                # Also provide text link as backup
+                                st.markdown(f"**Link alternatif:** [Unduh {export_name}.tif]({download_url})")
+                                st.info("💡 Klik tombol merah di atas untuk mengunduh berkas GeoTIFF ke komputer Anda.")
+                                
+                            else:
+                                st.error("❌ Gagal membuat URL unduhan. Coba kurangi area atau gunakan Google Cloud Storage.")
+                                
+                        except Exception as download_error:
+                            st.error(f"❌ Error saat membuat unduhan: {str(download_error)}")
+                            st.info("💡 Coba kurangi area kajian atau gunakan Google Cloud Storage untuk area yang lebih besar.")
                         
-                        #Pass the parameters to earth engine export
-                        task = ee.batch.Export.image.toDrive(**export_params)
+                        # Direct download completed - no task needed
                         
                     else:  # Google Cloud Storage
                         #Summarize the export parameter from user input for GCS
@@ -638,39 +690,28 @@ if st.session_state.composite is not None and st.session_state.aoi is not None:
                         
                         #Pass the parameters to earth engine export for Cloud Storage
                         task = ee.batch.Export.image.toCloudStorage(**export_params)
-                    
-                    task.start()
-                    
-                    #Store task info in session state for monitoring
-                    task_info = {
-                        'id': task.id,
-                        'name': export_name,
-                        'destination': export_destination,
-                        'folder': drive_folder if export_destination == "Google Drive" else gcs_bucket,
-                        'crs': export_crs,
-                        'scale': scale,
-                        'start_time': datetime.datetime.now(),
-                        'last_progress': 0,
-                        'last_update': datetime.datetime.now()
-                    }
-                    #Append to export tasks list
-                    st.session_state.export_tasks.append(task_info)
-                    #note, here the task is submitted, but not yet done
-                    st.success(f"✅ Tugas ekspor '{export_name}' berhasil dikirim!")
-                    st.info(f"ID Tugas: {task.id}")
-                    
-                    # Tampilkan detail ekspor berdasarkan tujuan
-                    if export_destination == "Google Drive":
-                        st.markdown(f"""
-                        **Detail Ekspor:**
-                        - Tujuan: Google Drive
-                        - Lokasi berkas: My Drive/{drive_folder}/{export_name}.tif
-                        - CRS: {export_crs}
-                        - Resolusi: {scale}m
                         
-                        Periksa progres di [Earth Engine Task Manager](https://code.earthengine.google.com/tasks) atau gunakan pemantau tugas di bawah ini.
-                        """)
-                    else:  # Google Cloud Storage
+                        task.start()
+                        
+                        #Store task info in session state for monitoring
+                        task_info = {
+                            'id': task.id,
+                            'name': export_name,
+                            'destination': export_destination,
+                            'folder': gcs_bucket,
+                            'crs': export_crs,
+                            'scale': scale,
+                            'start_time': datetime.datetime.now(),
+                            'last_progress': 0,
+                            'last_update': datetime.datetime.now()
+                        }
+                        #Append to export tasks list
+                        st.session_state.export_tasks.append(task_info)
+                        #note, here the task is submitted, but not yet done
+                        st.success(f"✅ Tugas ekspor '{export_name}' berhasil dikirim!")
+                        st.info(f"ID Tugas: {task.id}")
+                        
+                        # Display export details for Google Cloud Storage
                         st.markdown(f"""
                         **Detail Ekspor:**
                         - Tujuan: Google Cloud Storage

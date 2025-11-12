@@ -1,0 +1,512 @@
+{
+  "timestamp": "2025-11-06T12:47:11.711245",
+  "file": "pages/5_Module_6_Classification_and_LULC_Creation.py",
+  "summary": {
+    "total_strings": 99,
+    "translated": 3,
+    "untranslated": 96,
+    "completion_percentage": 3.0
+  },
+  "translated_strings": [
+    {
+      "line": 403,
+      "original": "Menggunakan nilai bawaan berdasarkan data yang digunakan",
+      "translation": "Menggunakan nilai bawaan berdasarkan data yang digunakan",
+      "context": "help=\"Menggunakan nilai bawaan berdasarkan data yang digunakan\""
+    },
+    {
+      "line": 412,
+      "original": "Berapa banyak variabel yang dipertimbangkan saat pengambilan keputusan (split)",
+      "translation": "Berapa banyak variabel yang dipertimbangkan saat pengambilan keputusan (split)",
+      "context": "help=\"Berapa banyak variabel yang dipertimbangkan saat pengambilan keputusan (split)\""
+    },
+    {
+      "line": 507,
+      "original": "Ulasan Model Klasifikasi",
+      "translation": "Ulasan Model Klasifikasi",
+      "context": "st.header(\"Ulasan Model Klasifikasi\")"
+    }
+  ],
+  "untranslated_strings": [
+    {
+      "line": 43,
+      "original": "Pembuatan Peta Tutupan Lahan",
+      "context": "st.title(\"Pembuatan Peta Tutupan Lahan\")"
+    },
+    {
+      "line": 59,
+      "original": "Cek Prasyarat",
+      "context": "st.subheader(\"Cek Prasyarat\")"
+    },
+    {
+      "line": 66,
+      "original": "✅ Gabungan citra tersedia dari modul 1",
+      "context": "st.success(\"✅ Gabungan citra tersedia dari modul 1\")"
+    },
+    {
+      "line": 78,
+      "original": "❌ Gabungan citra tidak tersedia",
+      "context": "st.error(\"❌ Gabungan citra tidak tersedia\")"
+    },
+    {
+      "line": 79,
+      "original": "Mohon selesaikan modul 1 untuk menghasilkan gabungan citra",
+      "context": "st.warning(\"Mohon selesaikan modul 1 untuk menghasilkan gabungan citra\")"
+    },
+    {
+      "line": 85,
+      "original": "✅ Data sampel tersedia",
+      "context": "st.success(\"✅ Data sampel tersedia\")"
+    },
+    {
+      "line": 105,
+      "original": "❌ Data sampel tidak tersedia",
+      "context": "st.error(\"❌ Data sampel tidak tersedia\")"
+    },
+    {
+      "line": 106,
+      "original": "Mohon selesaikan modul 3 dan 4 untuk menghasilkan dan melakukan analisis data sampel",
+      "context": "st.warning(\"Mohon selesaikan modul 3 dan 4 untuk menghasilkan dan melakukan analisis data sampel\")"
+    },
+    {
+      "line": 112,
+      "original": "⚠️ Selesaikan modul-modul sebelumnya sebelum melanjutkan ke klasifikasi",
+      "context": "st.info(\"⚠️ Selesaikan modul-modul sebelumnya sebelum melanjutkan ke klasifikasi\")"
+    },
+    {
+      "line": 189,
+      "original": "Pengaturan ekstraksi data citra",
+      "context": "st.header(\"Pengaturan ekstraksi data citra\")"
+    },
+    {
+      "line": 200,
+      "original": "Opsi pembagian data",
+      "context": "st.subheader(\"Opsi pembagian data\")"
+    },
+    {
+      "line": 205,
+      "original": "Jika tidak dicentang, seluruh data referensi akan digunakan untuk melatih model klasifikasi",
+      "context": "help=\"Jika tidak dicentang, seluruh data referensi akan digunakan untuk melatih model klasifikasi\""
+    },
+    {
+      "line": 209,
+      "original": "ROI dibagi menjadi data pelatihan dan pengujian menggunakan pendekatan pembagian acak berstrata",
+      "context": "st.info(\"ROI dibagi menjadi data pelatihan dan pengujian menggunakan pendekatan pembagian acak berstrata\")"
+    },
+    {
+      "line": 218,
+      "original": "Proporsi data yang digunakan untuk pelatihan",
+      "context": "help=\"Proporsi data yang digunakan untuk pelatihan\""
+    },
+    {
+      "line": 225,
+      "original": "Seluruh data ROI akan digunakan untuk pelatihan. Siapkan dataset pengujian independen.",
+      "context": "st.warning(\"Seluruh data ROI akan digunakan untuk pelatihan. Siapkan dataset pengujian independen.\")"
+    },
+    {
+      "line": 228,
+      "original": "Parameter ekstrasi data",
+      "context": "st.subheader(\"Parameter ekstrasi data\")"
+    },
+    {
+      "line": 235,
+      "original": "Nama kolom tabel atribut yang berisi ID kelas numerik",
+      "context": "help=\"Nama kolom tabel atribut yang berisi ID kelas numerik\""
+    },
+    {
+      "line": 243,
+      "original": "Resolusi spasial untuk pengambilan sampel",
+      "context": "help=\"Resolusi spasial untuk pengambilan sampel\""
+    },
+    {
+      "line": 245,
+      "original": "---",
+      "context": "st.markdown(\"---\")"
+    },
+    {
+      "line": 274,
+      "original": "✅ Feature extraction complete!",
+      "context": "st.success(\"✅ Feature extraction complete!\")"
+    },
+    {
+      "line": 286,
+      "original": "ℹ️ All ROI data has been used for training. No test set created.",
+      "context": "st.info(\"ℹ️ All ROI data has been used for training. No test set created.\")"
+    },
+    {
+      "line": 295,
+      "original": "Membuat model klasifikasi",
+      "context": "st.header(\"Membuat model klasifikasi\")"
+    },
+    {
+      "line": 325,
+      "original": "✅ Proses ekstraksi nilai piksel tersedia. Proses klasifikasi dapat dilakukan",
+      "context": "st.success(\"✅ Proses ekstraksi nilai piksel tersedia. Proses klasifikasi dapat dilakukan\")"
+    },
+    {
+      "line": 328,
+      "original": "⚙️ Pengaturan Model Klasifikasi",
+      "context": "st.subheader(\"⚙️ Pengaturan Model Klasifikasi\")"
+    },
+    {
+      "line": 336,
+      "original": "0",
+      "context": "st.markdown(\"0\")"
+    },
+    {
+      "line": 337,
+      "original": "0",
+      "context": "st.markdown(\"0\")"
+    },
+    {
+      "line": 338,
+      "original": "0",
+      "context": "st.markdown(\"0\")"
+    },
+    {
+      "line": 339,
+      "original": "0",
+      "context": "st.markdown(\"0\")"
+    },
+    {
+      "line": 340,
+      "original": "0",
+      "context": "st.markdown(\"0\")"
+    },
+    {
+      "line": 346,
+      "original": "0",
+      "context": "st.markdown(\"0\")"
+    },
+    {
+      "line": 350,
+      "original": "Jumlah pohon keputusan",
+      "context": "st.markdown(\"Jumlah pohon keputusan\")"
+    },
+    {
+      "line": 360,
+      "original": "0",
+      "context": "help=\"0\""
+    },
+    {
+      "line": 371,
+      "original": "Pengaruran lainnya",
+      "context": "st.markdown(\"Pengaruran lainnya\")"
+    },
+    {
+      "line": 372,
+      "original": "Parameter lainnya menggunakan nilai bawaan",
+      "context": "st.markdown(\"Parameter lainnya menggunakan nilai bawaan\")"
+    },
+    {
+      "line": 378,
+      "original": "✅ *Variables per split*: default (akar dari jumlah total variabel)",
+      "context": "st.success(\"✅ *Variables per split*: default (akar dari jumlah total variabel)\")"
+    },
+    {
+      "line": 379,
+      "original": "✅ *Minimum samples*: 1 (default)",
+      "context": "st.success(\"✅ *Minimum samples*: 1 (default)\")"
+    },
+    {
+      "line": 380,
+      "original": "💡 Nilai ini umumnya dapat menghasilkan model yang bagus",
+      "context": "st.info(\"💡 Nilai ini umumnya dapat menghasilkan model yang bagus\")"
+    },
+    {
+      "line": 383,
+      "original": "0",
+      "context": "st.markdown(\"0\")"
+    },
+    {
+      "line": 388,
+      "original": "### 🌲 Number of Trees",
+      "context": "st.markdown(\"### 🌲 Number of Trees\")"
+    },
+    {
+      "line": 395,
+      "original": "0",
+      "context": "help=\"0\""
+    },
+    {
+      "line": 399,
+      "original": "Jumlah variable per split",
+      "context": "st.markdown(\"Jumlah variable per split\")"
+    },
+    {
+      "line": 416,
+      "original": "✅ Menggunakna √(dari jumlah variabel/prediktor)",
+      "context": "st.success(\"✅ Menggunakna √(dari jumlah variabel/prediktor)\")"
+    },
+    {
+      "line": 419,
+      "original": "Jumlah minimum sampel daun?",
+      "context": "st.markdown(\"Jumlah minimum sampel daun?\")"
+    },
+    {
+      "line": 426,
+      "original": "Jumlah minimal sampel yang dibutuhkan untuk tiap leaf node",
+      "context": "help= \"Jumlah minimal sampel yang dibutuhkan untuk tiap leaf node\""
+    },
+    {
+      "line": 430,
+      "original": "---",
+      "context": "st.markdown(\"---\")"
+    },
+    {
+      "line": 492,
+      "original": "🎉 **Selamat!** Model klasifikasi telah berhasil dilatih!",
+      "context": "st.success(\"🎉 **Selamat!** Model klasifikasi telah berhasil dilatih!\")"
+    },
+    {
+      "line": 498,
+      "original": "❌ **Oops! Something went wrong during training.**",
+      "context": "st.error(\"❌ **Oops! Something went wrong during training.**\")"
+    },
+    {
+      "line": 511,
+      "original": "1. Feature Importance: Kanal citra mana yang mengandung informasi terpenting untuk pembelajaran model?",
+      "context": "st.markdown(\"1. Feature Importance: Kanal citra mana yang mengandung informasi terpenting untuk pembelajaran model?\")"
+    },
+    {
+      "line": 512,
+      "original": "2. Akurasi Model: Bagaimana model klasifikasi menghadapi data yang baru?",
+      "context": "st.markdown(\"2. Akurasi Model: Bagaimana model klasifikasi menghadapi data yang baru?\")"
+    },
+    {
+      "line": 517,
+      "original": "**📊 Feature Importance**",
+      "context": "st.markdown(\"**📊 Feature Importance**\")"
+    },
+    {
+      "line": 527,
+      "original": "**🎯 Akurasi Model**",
+      "context": "st.markdown(\"**🎯 Akurasi Model**\")"
+    },
+    {
+      "line": 542,
+      "original": "0",
+      "context": "st.warning(\"0\")"
+    },
+    {
+      "line": 547,
+      "original": "0",
+      "context": "st.error(\"0\")"
+    },
+    {
+      "line": 553,
+      "original": "📊 Feature Importance Analysis",
+      "context": "st.subheader(\"📊 Feature Importance Analysis\")"
+    },
+    {
+      "line": 600,
+      "original": "0",
+      "context": "st.markdown(\"0\")"
+    },
+    {
+      "line": 619,
+      "original": "🎯 Model Accuracy Assessment",
+      "context": "st.subheader(\"🎯 Model Accuracy Assessment\")"
+    },
+    {
+      "line": 638,
+      "original": "💡 No test data available for accuracy assessment",
+      "context": "st.info(\"💡 No test data available for accuracy assessment\")"
+    },
+    {
+      "line": 661,
+      "original": "✅ Accuracy assessment complete!",
+      "context": "st.success(\"✅ Accuracy assessment complete!\")"
+    },
+    {
+      "line": 669,
+      "original": "📈 Akurasi Tingkat Keseluruhan Model",
+      "context": "st.subheader(\"📈 Akurasi Tingkat Keseluruhan Model\")"
+    },
+    {
+      "line": 670,
+      "original": "Berikut adalah kualitas model pada tingkat keseluruhan. Akurasi pada tingkat kelas disajikan pada bagian setelah ini",
+      "context": "st.markdown(\"Berikut adalah kualitas model pada tingkat keseluruhan. Akurasi pada tingkat kelas disajikan pada bagian setelah ini\")"
+    },
+    {
+      "line": 715,
+      "original": "---",
+      "context": "st.markdown(\"---\")"
+    },
+    {
+      "line": 718,
+      "original": "📋 Akurasi Tingkat Kelas",
+      "context": "st.subheader(\"📋 Akurasi Tingkat Kelas\")"
+    },
+    {
+      "line": 759,
+      "original": "🔍 Confusion Matrix",
+      "context": "st.subheader(\"🔍 Confusion Matrix\")"
+    },
+    {
+      "line": 760,
+      "original": "Menunjukkan seberapa sering setiap kelas berhasil diidentifikasi dengan benar dibandingkan dengan yang keliru diklasifikasikan sebagai kelas lain.",
+      "context": "st.markdown(\"Menunjukkan seberapa sering setiap kelas berhasil diidentifikasi dengan benar dibandingkan dengan yang keliru diklasifikasikan sebagai kelas lain.\")"
+    },
+    {
+      "line": 847,
+      "original": "#### Confusion Matrix Summary",
+      "context": "st.markdown(\"#### Confusion Matrix Summary\")"
+    },
+    {
+      "line": 864,
+      "original": "**Per-Class Performance:**",
+      "context": "st.markdown(\"**Per-Class Performance:**\")"
+    },
+    {
+      "line": 869,
+      "original": "**Most Common Misclassifications:**",
+      "context": "st.markdown(\"**Most Common Misclassifications:**\")"
+    },
+    {
+      "line": 886,
+      "original": "🎉 Perfect classification! No misclassifications found.",
+      "context": "st.success(\"🎉 Perfect classification! No misclassifications found.\")"
+    },
+    {
+      "line": 891,
+      "original": "Visualisasi",
+      "context": "st.header(\"Visualisasi\")"
+    },
+    {
+      "line": 898,
+      "original": "ℹ️ No classification results yet. Please run classification first.",
+      "context": "st.info(\"ℹ️ No classification results yet. Please run classification first.\")"
+    },
+    {
+      "line": 900,
+      "original": "✅ Klasifikasi Selesai!",
+      "context": "st.success(\"✅ Klasifikasi Selesai!\")"
+    },
+    {
+      "line": 902,
+      "original": "Pratinjau Hasil Klasifikasi",
+      "context": "st.subheader(\"Pratinjau Hasil Klasifikasi\")"
+    },
+    {
+      "line": 960,
+      "original": "🗺️ Legenda Klasifikasi",
+      "context": "st.subheader(\"🗺️ Legenda Klasifikasi\")"
+    },
+    {
+      "line": 988,
+      "original": "Adjust colors for each land cover class:",
+      "context": "st.markdown(\"Adjust colors for each land cover class:\")"
+    },
+    {
+      "line": 1008,
+      "original": "🔄 Apply Color Changes",
+      "context": "if st.button(\"🔄 Apply Color Changes\"):"
+    },
+    {
+      "line": 1013,
+      "original": "Colors updated! Map will refresh automatically.",
+      "context": "st.success(\"Colors updated! Map will refresh automatically.\")"
+    },
+    {
+      "line": 1018,
+      "original": "🔄 Reset to Module 2 Colors",
+      "context": "if st.button(\"🔄 Reset to Module 2 Colors\"):"
+    },
+    {
+      "line": 1027,
+      "original": "Colors reset to Module 2 scheme!",
+      "context": "st.success(\"Colors reset to Module 2 scheme!\")"
+    },
+    {
+      "line": 1030,
+      "original": "---",
+      "context": "st.markdown(\"---\")"
+    },
+    {
+      "line": 1068,
+      "original": "Informasi kelas tidak tersedia",
+      "context": "st.error(\"Informasi kelas tidak tersedia\")"
+    },
+    {
+      "line": 1069,
+      "original": "Pastikan modul 2 telah selesai atau data sampel memiliki ID dan nama kelas yang unik",
+      "context": "st.info(\"Pastikan modul 2 telah selesai atau data sampel memiliki ID dan nama kelas yang unik\")"
+    },
+    {
+      "line": 1079,
+      "original": "Simpan Hasil Klasifikasi",
+      "context": "st.header(\"Simpan Hasil Klasifikasi\")"
+    },
+    {
+      "line": 1090,
+      "original": "ℹ️ Klasifikasi belum tersedia, silahkan jalankan klasifikasi terlebih dahulu",
+      "context": "st.info(\"ℹ️ Klasifikasi belum tersedia, silahkan jalankan klasifikasi terlebih dahulu\")"
+    },
+    {
+      "line": 1092,
+      "original": "✅ Klasifikasi selesai!",
+      "context": "st.success(\"✅ Klasifikasi selesai!\")"
+    },
+    {
+      "line": 1095,
+      "original": "Simpan Hasil Klasifikasi Melalui Google Drive",
+      "context": "st.subheader(\"Simpan Hasil Klasifikasi Melalui Google Drive\")"
+    },
+    {
+      "line": 1109,
+      "original": "Hasil akan disimpan dalam format GeoTIFF (.tif)",
+      "context": "help=\"Hasil akan disimpan dalam format GeoTIFF (.tif)\""
+    },
+    {
+      "line": 1134,
+      "original": "Example: 32648 (UTM Zone 48N)",
+      "context": "help=\"Example: 32648 (UTM Zone 48N)\""
+    },
+    {
+      "line": 1151,
+      "original": "📄 Export format: GeoTIFF (Integer)",
+      "context": "st.info(\"📄 Export format: GeoTIFF (Integer)\")"
+    },
+    {
+      "line": 1231,
+      "original": "Informasi Pemecahan Masalah:",
+      "context": "st.info(\"Informasi Pemecahan Masalah:\")"
+    },
+    {
+      "line": 1237,
+      "original": "Earth Engine Export Monitor",
+      "context": "st.subheader(\"Earth Engine Export Monitor\")"
+    },
+    {
+      "line": 1263,
+      "original": "Failed to get task status",
+      "context": "st.error(\"Failed to get task status\")"
+    },
+    {
+      "line": 1275,
+      "original": "Refresh this task",
+      "context": "if st.button(f\"🔄\", key=f\"refresh_class_{i}\", help=\"Refresh this task\"):"
+    },
+    {
+      "line": 1329,
+      "original": "✅ Classification export completed successfully!",
+      "context": "st.success(\"✅ Classification export completed successfully!\")"
+    },
+    {
+      "line": 1362,
+      "original": "Navigasi modul",
+      "context": "st.subheader(\"Navigasi modul\")"
+    },
+    {
+      "line": 1374,
+      "original": "Modul uji akurasi akan segera tersedia!",
+      "context": "st.info(\"Modul uji akurasi akan segera tersedia!\")"
+    },
+    {
+      "line": 1382,
+      "original": "💡 Complete feature extraction and classification to proceed",
+      "context": "st.info(\"💡 Complete feature extraction and classification to proceed\")"
+    }
+  ]
+}

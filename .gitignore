@@ -212,3 +212,7 @@ notebooks/Module_3_Generate_ROI.ipynb
 /auth
 *.geojson
 /i18n
+
+**/report*
+**/report
+**/report/

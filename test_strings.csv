@@ -1,0 +1,3 @@
+ID,File,Category,Line,Context,English Text,Bahasa Indonesia,Status,Full Line,Pattern
+1,home.py,Messages,32,success,Earth Engine initialized successfully!,,Needs Translation,"st.success(""Earth Engine initialized successfully!"")","st\.success\s*\(\s*[""\']([^""\']+)[""\']\s*\)"
+2,home.py,Messages,34,error,Failed to initialize Earth Engine. Please check your authentication.,,Needs Translation,"st.error(""Failed to initialize Earth Engine. Please check your authentication."")","st\.error\s*\(\s*[""\']([^""\']+)[""\']\s*\)"

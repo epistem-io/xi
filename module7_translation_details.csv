@@ -1,0 +1,44 @@
+Type,Text,Status
+st.title,Penilaian Akurasi Tematik,Translated
+st.subheader,Langkah 1: Unggah Data Referensi Lapangan,Translated
+st.subheader,Langkah 2: Konfigurasi dan Jalankan Penilaian,Translated
+st.subheader,Hasil Penilaian Akurasi,Translated
+st.subheader,Kinerja per Kelas,Translated
+st.subheader,🔄 Matriks Konfusi,Translated
+st.error,❌ Tidak ditemukan hasil klasifikasi dari Modul 6.,Translated
+st.error,Data validasi tidak berhasil dimuat dengan benar.,Translated
+st.warning,Selesaikan Modul 6 terlebih dahulu untuk menghasilkan peta klasifikasi tutupan lahan.,Translated
+st.warning,⚠️ Harap unggah data validasi Anda terlebih dahulu.,Translated
+st.success,✅ Peta klasifikasi dimuat dari Modul 6,Translated
+st.success,✅ Penilaian akurasi tematik selesai!,Translated
+st.info,📁 Unggah **shapefile .zip** yang berisi sampel validasi independen Anda dengan ID kelas.,Translated
+st.info,"💡 Pastikan shapefile Anda menyertakan semua file yang diperlukan (.shp, .shx, .dbf, .prj)",Translated
+st.info,💡 Kembali ke Modul 6 untuk meningkatkan model klasifikasi Anda jika diperlukan,Translated
+st.button,🎯 Evaluasi Akurasi Peta,Translated
+st.button,⬅️ Kembali ke Modul 6,Translated
+st.selectbox,Kolom ID Kelas:,Translated
+st.number_input,Ukuran Piksel (meter):,Translated
+st.slider,Tingkat Kepercayaan untuk Interval Akurasi:,Translated
+st.file_uploader,Pilih shapefile terkompresi (.zip),Translated
+st.metric,Akurasi Keseluruhan,Translated
+st.metric,Koefisien Kappa,Needs Review
+st.metric,Ukuran Sampel,Translated
+st.download_button,📥 Unduh Ringkasan Hasil,Translated
+st.download_button,📥 Unduh Metrik Kelas,Translated
+help_text,"Kolom yang berisi pengenal kelas numerik (mis. 1, 2, 3, 4)",Translated
+help_text,Resolusi spasial untuk pengambilan sampel pada peta terklasifikasi,Translated
+page_title,Penilaian Akurasi Tematik,Translated
+st.markdown,**📍 Sebaran Titik Validasi:**,Translated
+f-string,<style>{f.read()}</style>,Translated
+f-string,Kesalahan memproses shapefile: {str(e)},Translated
+f-string,✅ {message},Translated
+f-string,❌ {message},Translated
+f-string,"❌ Penilaian gagal: {results.get('error', 'Kesalahan tidak diketahui')}",Translated
+f-string,❌ {results['error']},Needs Review
+f-string,{results['overall_accuracy']*100:.2f}%,Needs Review
+f-string,{results['kappa']:.3f},Needs Review
+f-string,Interval Kepercayaan {confidence_pct}%,Translated
+f-string,{ci[0]*100:.1f}% - {ci[1]*100:.1f}%,Translated
+f-string,{results['n_total']} titik,Needs Review
+f-string,Prediksi {i},Translated
+f-string,Aktual {i},Translated
