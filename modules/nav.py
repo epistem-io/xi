@@ -25,6 +25,9 @@ def Navbar():
         st.page_link('pages/6_Module_7_Thematic_Accuracy.py', 
                     label='Modul 7: Uji Akurasi Petamu')
         
+        st.page_link('pages/7_About.py', 
+                    label='Tentang Epistem-X')
+        
         # Separator
         st.markdown("---")
         
