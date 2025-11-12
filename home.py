@@ -103,14 +103,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Create the About button with proper navigation
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    if st.button("ℹ️ Tentang - Informasi tentang platform Epistem-X", 
-                 key="about_nav", 
-                 use_container_width=True,
-                 help="Klik untuk membuka halaman Tentang"):
-        st.switch_page("pages/7_About.py")
 
 st.markdown('<div class="module-header">📋 Modul - Modul Epistem</div>', unsafe_allow_html=True)
 
