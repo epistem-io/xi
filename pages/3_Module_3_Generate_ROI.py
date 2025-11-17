@@ -406,9 +406,10 @@ if reference_data_source:
         
         if True:  # Always show if we reach this point
             st.markdown("**Pratayang data latih (tabel):**")
-            # Show training data
+            # Show training data (drop geometry column to avoid Arrow serialization error)
             preview_df = train_data_ref.head(10)
-            st.dataframe(preview_df, use_container_width=True)
+            display_cols = [col for col in preview_df.columns if col != 'geometry']
+            st.dataframe(preview_df[display_cols], use_container_width=True)
             
             st.markdown("**Pratayang data latih (peta):**")
             
@@ -721,7 +722,9 @@ else:
                                                                                               
                         if TrainField and TrainField != "-- Pilih Field --":
                             st.markdown("**Pratayang data latih (tabel):**")
-                            st.dataframe(gdf)
+                            # Drop geometry column for display to avoid Arrow serialization error
+                            display_cols = [col for col in gdf.columns if col != 'geometry']
+                            st.dataframe(gdf[display_cols].head(100), use_container_width=True)
 
                             st.markdown("**Pratayang data latih (peta):**")
                             

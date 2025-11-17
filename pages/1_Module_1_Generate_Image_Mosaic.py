@@ -491,6 +491,8 @@ else:
     st.info("Unggah Wilayah kajian dan tentukan kriteria pencarian untuk memulai.")
 
 #=========5. Exporting the image collection===========
+#current version only support direct download for data no larger in 32mb 
+#if the data can be downloaded, the image is split into various bands. Dont do that. Make it one data
 #check if the session state is not empty
 if st.session_state.composite is not None and st.session_state.aoi is not None:
     st.subheader("Simpan Gabungan Citra")

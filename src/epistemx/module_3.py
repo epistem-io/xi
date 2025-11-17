@@ -396,11 +396,33 @@ try:
                 if aoi_geometry is not None and hasattr(aoi_geometry, 'geometry'):
                     # Perform spatial filter (simplified)
                     try:
-                        filtered_data = gpd.sjoin(training_data, aoi_geometry, how='inner', predicate='within')
+                        # Ensure both GeoDataFrames have the same CRS
+                        if training_data.crs != aoi_geometry.crs:
+                            logger.info(f"Reprojecting training data from {training_data.crs} to {aoi_geometry.crs}")
+                            training_data = training_data.to_crs(aoi_geometry.crs)
+                        
+                        # Use 'intersects' instead of 'within' to catch polygons that overlap with AOI
+                        # This is more appropriate for polygon training data
+                        filtered_data = gpd.sjoin(training_data, aoi_geometry, how='inner', predicate='intersects')
+                        
+                        # Remove duplicate columns from the join (index_right, etc.)
+                        cols_to_keep = [col for col in filtered_data.columns if not col.startswith('index_')]
+                        if 'index_right' in filtered_data.columns:
+                            cols_to_keep = [col for col in cols_to_keep if col != 'index_right']
+                        filtered_data = filtered_data[cols_to_keep]
+                        
+                        # Remove duplicate rows that may result from multiple AOI polygons
+                        filtered_data = filtered_data.drop_duplicates()
+                        
+                        logger.info(f"AOI filtering: {len(training_data)} -> {len(filtered_data)} features")
+                        
                         train_data_dict['training_data'] = filtered_data
                         train_data_dict['validation_results']['valid_points'] = len(filtered_data)
                     except Exception as e:
                         logger.warning(f"AOI filtering failed: {str(e)}")
+                        # If filtering fails, keep original data
+                        train_data_dict['validation_results']['valid_points'] = len(training_data)
+                        train_data_dict['validation_results']['warnings'].append(f"AOI filtering skipped: {str(e)}")
             
             return train_data_dict
         
