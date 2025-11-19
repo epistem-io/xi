@@ -20,22 +20,6 @@ logger = logging.getLogger(__name__)
 try:
     import ee
     
-    class InputCheck:
-        """Input checking functionality."""
-        
-        @staticmethod
-        def check_prerequisites():
-            """Check if all prerequisites are met."""
-            aoi_available = 'AOI' in st.session_state and 'gdf' in st.session_state
-            classification_available = (
-                ('classification_df' in st.session_state and not st.session_state['classification_df'].empty) or
-                ('lulc_classes_final' in st.session_state and len(st.session_state['lulc_classes_final']) > 0) or
-                ('classes' in st.session_state and len(st.session_state['classes']) > 0)
-            )
-            composite_available = 'composite' in st.session_state
-            
-            return aoi_available and classification_available and composite_available
-    
     class SyncTrainData:
         """Training data synchronization functionality."""
         
@@ -514,30 +498,9 @@ try:
             except Exception as e:
                 logger.error(f"Error splitting training data: {str(e)}")
                 return gpd.GeoDataFrame(), gpd.GeoDataFrame()
-    
-    class LULCSamplingTool:
-        """LULC sampling tool functionality."""
-        
-        def __init__(self, lulc_table):
-            self.lulc_table = lulc_table
-        
-        def create_sampling_interface(self):
-            """Create sampling interface."""
-            try:
-                from .interactive_sampling import create_integrated_sampling_interface
-                return create_integrated_sampling_interface()
-            except ImportError:
-                st.error("Interactive sampling functionality not available")
-                return False, None
 
 except ImportError as e:
     logger.warning(f"Some functionality not available: {str(e)}")
-    
-    # Create placeholder classes if imports fail
-    class InputCheck:
-        @staticmethod
-        def check_prerequisites():
-            return False
     
     class SyncTrainData:
         @staticmethod
@@ -586,7 +549,3 @@ except ImportError as e:
             except Exception as e:
                 logger.error(f"Error in split: {str(e)}")
                 return gpd.GeoDataFrame(), gpd.GeoDataFrame()
-    
-    class LULCSamplingTool:
-        def __init__(self, lulc_table):
-            self.lulc_table = lulc_table

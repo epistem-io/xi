@@ -10,8 +10,9 @@ import tempfile
 import zipfile
 import os
 import math
+import shapefile
 from shapely.geometry import shape, Point, Polygon, mapping
-from epistemx.module_3 import InputCheck, SyncTrainData, LULCSamplingTool
+from epistemx.module_3 import SyncTrainData
 from epistemx.ee_config import initialize_earth_engine
 from modules.nav import Navbar
 from ui_helper import show_footer, show_header
@@ -191,7 +192,6 @@ if reference_data_source:
                     if AOI_GDF.crs != 'EPSG:4326':
                         AOI_GDF_wgs84 = AOI_GDF.to_crs('EPSG:4326')
                         
-                        from shapely.geometry import mapping
                         geom_list = []
                         for idx, row in AOI_GDF_wgs84.iterrows():
                             geom_dict = mapping(row.geometry)
@@ -414,8 +414,6 @@ if reference_data_source:
             st.markdown("**Pratayang data latih (peta):**")
             
             with st.spinner("Memuat peta dan data latih..."):
-                import folium
-                from streamlit_folium import st_folium
                 
                 # Initialize map
                 m = folium.Map(tiles="OpenStreetMap")
@@ -684,9 +682,6 @@ else:
         uploaded_file = st.file_uploader("Unggah shapefile (.zip)", type=["zip"])
         
         if uploaded_file:
-            import tempfile
-            import zipfile
-            import os
             
             with tempfile.TemporaryDirectory() as tmpdir:
                 # Extract zip file
@@ -707,7 +702,6 @@ else:
                 if shp_files:
                     try:
                         # Load and validate shapefile
-                        import geopandas as gpd
                         gdf = gpd.read_file(shp_files[0])
                         st.success("Data latih berhasil dimuat!")
 
@@ -729,8 +723,6 @@ else:
                             st.markdown("**Pratayang data latih (peta):**")
                             
                             with st.spinner("Memuat peta dan data latih..."):
-                                import folium
-                                from streamlit_folium import st_folium
                                 
                                 # Initialize map
                                 m = folium.Map(tiles="OpenStreetMap")
@@ -1413,10 +1405,8 @@ else:
                     st.download_button("📥 Unduh GeoJSON", data=geojson_str, file_name="LULC_digitization_data.geojson", mime="application/json", use_container_width=True)
                 
                 with col_b:
-                    if st.button("📥 Unduh Shapefile (.zip)", use_container_width=True):
+                    if st.button("📥 Unduh Shapefile", use_container_width=True):
                         try:
-                            import shapefile
-                            from shapely.geometry import shape as shapely_shape
                             
                             with tempfile.TemporaryDirectory() as tmpdir:
                                 shp_path = os.path.join(tmpdir, 'lulc_sampling')
@@ -1433,7 +1423,7 @@ else:
                                 
                                 # Add records
                                 for feature in st.session_state.sampling_data['features']:
-                                    geom = shapely_shape(feature['geometry'])
+                                    geom = shape(feature['geometry'])
                                     props = feature.get('properties', {})
                                     
                                     # Add geometry
@@ -1470,7 +1460,7 @@ else:
                                 with open(zip_path, 'rb') as f:
                                     zip_data = f.read()
                                 
-                                st.download_button("Unduh Shapefile (.zip)", data=zip_data, file_name="lulc_sampling.zip", mime="application/zip", use_container_width=True)
+                                st.download_button("Klik disini untuk unduh shapefile (.zip)", data=zip_data, file_name="lulc_sampling.zip", mime="application/zip", use_container_width=True)
                                 st.success("✅ Shapefile berhasil dibuat!")
                                 
                         except Exception as e:
@@ -1660,11 +1650,7 @@ else:
                             'training_data_count': total_samples
                         })
                         st.success(f"Data latih berhasil ditetapkan! ({total_samples} sampel dari Sampling On Screen)")
-
-
-
-
-
+                        
 st.divider()
 st.subheader("Navigasi Modul")
 col1, col2 = st.columns(2)
