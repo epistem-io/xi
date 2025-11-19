@@ -20,22 +20,6 @@ logger = logging.getLogger(__name__)
 try:
     import ee
     
-    class InputCheck:
-        """Input checking functionality."""
-        
-        @staticmethod
-        def check_prerequisites():
-            """Check if all prerequisites are met."""
-            aoi_available = 'AOI' in st.session_state and 'gdf' in st.session_state
-            classification_available = (
-                ('classification_df' in st.session_state and not st.session_state['classification_df'].empty) or
-                ('lulc_classes_final' in st.session_state and len(st.session_state['lulc_classes_final']) > 0) or
-                ('classes' in st.session_state and len(st.session_state['classes']) > 0)
-            )
-            composite_available = 'composite' in st.session_state
-            
-            return aoi_available and classification_available and composite_available
-    
     class SyncTrainData:
         """Training data synchronization functionality."""
         
@@ -396,11 +380,33 @@ try:
                 if aoi_geometry is not None and hasattr(aoi_geometry, 'geometry'):
                     # Perform spatial filter (simplified)
                     try:
-                        filtered_data = gpd.sjoin(training_data, aoi_geometry, how='inner', predicate='within')
+                        # Ensure both GeoDataFrames have the same CRS
+                        if training_data.crs != aoi_geometry.crs:
+                            logger.info(f"Reprojecting training data from {training_data.crs} to {aoi_geometry.crs}")
+                            training_data = training_data.to_crs(aoi_geometry.crs)
+                        
+                        # Use 'intersects' instead of 'within' to catch polygons that overlap with AOI
+                        # This is more appropriate for polygon training data
+                        filtered_data = gpd.sjoin(training_data, aoi_geometry, how='inner', predicate='intersects')
+                        
+                        # Remove duplicate columns from the join (index_right, etc.)
+                        cols_to_keep = [col for col in filtered_data.columns if not col.startswith('index_')]
+                        if 'index_right' in filtered_data.columns:
+                            cols_to_keep = [col for col in cols_to_keep if col != 'index_right']
+                        filtered_data = filtered_data[cols_to_keep]
+                        
+                        # Remove duplicate rows that may result from multiple AOI polygons
+                        filtered_data = filtered_data.drop_duplicates()
+                        
+                        logger.info(f"AOI filtering: {len(training_data)} -> {len(filtered_data)} features")
+                        
                         train_data_dict['training_data'] = filtered_data
                         train_data_dict['validation_results']['valid_points'] = len(filtered_data)
                     except Exception as e:
                         logger.warning(f"AOI filtering failed: {str(e)}")
+                        # If filtering fails, keep original data
+                        train_data_dict['validation_results']['valid_points'] = len(training_data)
+                        train_data_dict['validation_results']['warnings'].append(f"AOI filtering skipped: {str(e)}")
             
             return train_data_dict
         
@@ -492,30 +498,9 @@ try:
             except Exception as e:
                 logger.error(f"Error splitting training data: {str(e)}")
                 return gpd.GeoDataFrame(), gpd.GeoDataFrame()
-    
-    class LULCSamplingTool:
-        """LULC sampling tool functionality."""
-        
-        def __init__(self, lulc_table):
-            self.lulc_table = lulc_table
-        
-        def create_sampling_interface(self):
-            """Create sampling interface."""
-            try:
-                from .interactive_sampling import create_integrated_sampling_interface
-                return create_integrated_sampling_interface()
-            except ImportError:
-                st.error("Interactive sampling functionality not available")
-                return False, None
 
 except ImportError as e:
     logger.warning(f"Some functionality not available: {str(e)}")
-    
-    # Create placeholder classes if imports fail
-    class InputCheck:
-        @staticmethod
-        def check_prerequisites():
-            return False
     
     class SyncTrainData:
         @staticmethod
@@ -564,7 +549,3 @@ except ImportError as e:
             except Exception as e:
                 logger.error(f"Error in split: {str(e)}")
                 return gpd.GeoDataFrame(), gpd.GeoDataFrame()
-    
-    class LULCSamplingTool:
-        def __init__(self, lulc_table):
-            self.lulc_table = lulc_table
