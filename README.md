@@ -1,3 +1,2 @@
-# EpistemXBackend new_main
+# LUMA Back-end Development
 
-This branch is used to store the new updates of Epistem-X backend
