@@ -10,7 +10,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-# Module 1: Cloudless Image Mosaic
+# Module 1: Near Cloud Free Acquisition
 ## System Response 1.2: Search and Filter Imagery
 class Reflectance_Data:
     """Class for fetching and pre-processing Landsat image collection from Google Earth Engine API."""
@@ -73,9 +73,9 @@ class Reflectance_Data:
             'description': 'Landsat 9 Operational Land Imager-2 Surface Reflectance'
         }
     }
-#Define the thermal datasets. The thermal bands used is from Collection 2 Top-of-atmosphere data 
-#The TOA data provide consistent result and contain minimum missing pixel data
-#Note: Landsat 1-3 MSS sensors did not have thermal bands, so they are not included
+    #Define the thermal datasets. The thermal bands used is from Collection 2 Top-of-atmosphere data 
+    #The TOA data provide consistent result and contain minimum missing pixel data
+    #Note: Landsat 1-3 MSS sensors did not have thermal bands, so they are not included
     THERMAL_DATASETS = {
         'L4_TOA': {
             'collection': 'LANDSAT/LT04/C02/T1_TOA',
@@ -177,23 +177,25 @@ class Reflectance_Data:
             >>> masked_image = get_landsat.mask_landsat_sr(image)
             """
             qa = image.select('QA_PIXEL')
-            #Deterministic bits ---
+            #Deterministic bits
+            #fyi, (bit 3 is set to 1) and so on
             cloud_bit = 1 << 3
             shadow_bit = 1 << 4
+            cirrus_bit = 1 << 2
+            
             cloud_mask = qa.bitwiseAnd(cloud_bit).eq(0)
             shadow_mask = qa.bitwiseAnd(shadow_bit).eq(0)
+            cirrus_mask = qa.bitwiseAnd(cirrus_bit).eq(0)
             #Confidence bits ---
             cloud_conf = qa.rightShift(8).bitwiseAnd(3)     # Bits 8–9
             shadow_conf = qa.rightShift(10).bitwiseAnd(3)   # Bits 10–11
-            #snow_conf = qa.rightShift(12).bitwiseAnd(3)     # Bits 12–13
             cirrus_conf = qa.rightShift(14).bitwiseAnd(3)   # Bits 14–15
             #Keep pixels below thresholds
             conf_mask = (cloud_conf.lt(cloud_conf_thresh)
                         .And(shadow_conf.lt(shadow_conf_thresh))
-                        #.And(snow_conf.lt(snow_conf_thresh))
                         .And(cirrus_conf.lt(cirrus_conf_thresh)))
             #Final mask
-            final_mask = cloud_mask.And(shadow_mask).And(conf_mask)
+            final_mask = cloud_mask.And(shadow_mask).And(cirrus_mask).And(conf_mask)
             return image.updateMask(final_mask).copyProperties(image, image.propertyNames())
     #Functions to rename Landsat bands 
     def rename_landsat_bands(self, image, sensor_type):
@@ -659,4 +661,194 @@ class Reflectance_Stats:
                 print(f"... and {len(stats['Scene_ids']) - 10} more scenes")
             print()
         
-        print("="*60)        
+        print("="*60)
+
+class final_Image:
+    """
+    Class for combining image collections to get the final images.
+    Supports single-date mosaics and time series compositing.
+    """
+    
+    def __init__(self, log_level=logging.INFO):
+        """
+        Initialize the final_Image object and set up a class-specific logger.
+        """
+        ensure_ee_initialized()
+        
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger.setLevel(log_level)
+        self.logger.info("final_Image initialized.")
+    
+    def get_single_date_image(self, collection, aoi, target_date=None, mosaic=True):
+        """
+        Get a single-date image from collection, either by mosaicking multiple scenes
+        or selecting the closest date if target_date is specified.
+        
+        Parameters
+        ----------
+        collection : ee.ImageCollection
+            Filtered image collection from Reflectance_Data
+        aoi : ee.Geometry or ee.FeatureCollection
+            Area of interest for clipping
+        target_date : str, optional
+            Target date in 'YYYY-MM-DD' format. If None, uses the first available date
+        mosaic : bool
+            If True, mosaic multiple scenes from the same date (default: True)
+            
+        Returns
+        -------
+        ee.Image
+            Single image clipped to AOI
+            
+        Example
+        -------
+        >>> data_fetcher = Reflectance_Data()
+        >>> collection, stats = data_fetcher.get_optical_data(aoi, 2020, 2020, 'L8_SR')
+        >>> image_processor = final_Image()
+        >>> single_image = image_processor.get_single_date_image(collection, aoi, '2020-06-15')
+        """
+        if isinstance(aoi, ee.FeatureCollection):
+            geometry = aoi.geometry()
+        else:
+            geometry = aoi
+            
+        if target_date:
+            # Filter to specific date
+            filtered = collection.filterDate(target_date, 
+                                            ee.Date(target_date).advance(1, 'day'))
+            size = filtered.size().getInfo()
+            
+            if size == 0:
+                self.logger.warning(f"No images found for date {target_date}")
+                # Find closest date
+                all_dates = collection.aggregate_array('system:time_start').getInfo()
+                if not all_dates:
+                    raise ValueError("Collection is empty")
+                    
+                target_ms = ee.Date(target_date).millis().getInfo()
+                closest_date = min(all_dates, key=lambda x: abs(x - target_ms))
+                closest_str = datetime.fromtimestamp(closest_date/1000).strftime('%Y-%m-%d')
+                self.logger.info(f"Using closest available date: {closest_str}")
+                
+                filtered = collection.filterDate(closest_str, 
+                                                ee.Date(closest_str).advance(1, 'day'))
+            else:
+                self.logger.info(f"Found {size} scene(s) for date {target_date}")
+        else:
+            # Use first available date
+            first_date = ee.Date(collection.first().get('system:time_start'))
+            next_day = first_date.advance(1, 'day')
+            filtered = collection.filterDate(first_date, next_day)
+            date_str = datetime.fromtimestamp(first_date.millis().getInfo()/1000).strftime('%Y-%m-%d')
+            self.logger.info(f"Using first available date: {date_str}")
+        
+        # Create final image
+        if mosaic:
+            image = filtered.mosaic()
+            self.logger.info("Created mosaic from multiple scenes")
+        else:
+            image = filtered.first()
+            self.logger.info("Selected first scene")
+        
+        # Clip to AOI
+        clipped = image.clip(geometry)
+        
+        # Preserve metadata from first image
+        first_img = filtered.first()
+        clipped = clipped.copyProperties(first_img, first_img.propertyNames())
+        
+        return clipped
+    
+    def get_temporal_composite(self, collection, aoi, reducer='median', 
+                              clip_output=True, add_band_stats=False):
+        """
+        Create a temporal composite from image collection using specified reducer.
+        
+        Parameters
+        ----------
+        collection : ee.ImageCollection
+            Filtered image collection from Reflectance_Data
+        aoi : ee.Geometry or ee.FeatureCollection
+            Area of interest for clipping
+        reducer : str or ee.Reducer
+            Reduction method: 'median', 'mean', 'min', 'max', 'percentile_XX'
+            (default: 'median')
+        clip_output : bool
+            Whether to clip the output to AOI (default: True)
+        add_band_stats : bool
+            If True, add additional bands with stdDev and count (default: False)
+            
+        Returns
+        -------
+        ee.Image
+            Composite image
+            
+        Example
+        -------
+        >>> data_fetcher = Reflectance_Data()
+        >>> collection, stats = data_fetcher.get_optical_data(aoi, 2020, 2020, 'L8_SR')
+        >>> image_processor = final_Image()
+        >>> composite = image_processor.get_temporal_composite(collection, aoi, reducer='median')
+        """
+        if isinstance(aoi, ee.FeatureCollection):
+            geometry = aoi.geometry()
+        else:
+            geometry = aoi
+        
+        # Get reducer
+        if isinstance(reducer, str):
+            reducer_lower = reducer.lower()
+            if reducer_lower == 'median':
+                ee_reducer = ee.Reducer.median()
+            elif reducer_lower == 'mean':
+                ee_reducer = ee.Reducer.mean()
+            elif reducer_lower == 'min':
+                ee_reducer = ee.Reducer.min()
+            elif reducer_lower == 'max':
+                ee_reducer = ee.Reducer.max()
+            elif reducer_lower.startswith('percentile_'):
+                percentile = int(reducer_lower.split('_')[1])
+                ee_reducer = ee.Reducer.percentile([percentile])
+            else:
+                raise ValueError(f"Unsupported reducer: {reducer}")
+        else:
+            ee_reducer = reducer
+        
+        # Check collection size
+        size = collection.size().getInfo()
+        if size == 0:
+            raise ValueError("Collection is empty, cannot create composite")
+        
+        self.logger.info(f"Creating {reducer} composite from {size} images")
+        
+        # Create composite
+        if add_band_stats:
+            # Combine multiple reducers
+            composite = collection.reduce(ee.Reducer.median()
+                                        .combine(ee.Reducer.stdDev(), '', True)
+                                        .combine(ee.Reducer.count(), '', True))
+        else:
+            composite = collection.reduce(ee_reducer)
+        
+        # Clip if requested
+        if clip_output:
+            composite = composite.clip(geometry)
+            self.logger.info("Composite clipped to AOI")
+        
+        # Add metadata
+        first_img = collection.first()
+        last_img = collection.sort('system:time_start', False).first()
+        
+        start_date = ee.Date(first_img.get('system:time_start')).format('YYYY-MM-dd').getInfo()
+        end_date = ee.Date(last_img.get('system:time_start')).format('YYYY-MM-dd').getInfo()
+        
+        composite = composite.set({
+            'composite_start_date': start_date,
+            'composite_end_date': end_date,
+            'composite_count': size,
+            'composite_reducer': str(reducer)
+        })
+        
+        self.logger.info(f"Composite created from {start_date} to {end_date}")
+        
+        return composite
